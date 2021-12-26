@@ -10,12 +10,13 @@ local ModulePath = LuaPath .. [[Moogle Telegraphs\]]
 local ModuleSettings = ModulePath .. [[Settings.lua]]
 local DebugOutput = ModulePath .. [[DebugOutput.lua]]
 local ImageFolder = ModulePath .. [[Images\]]
+local preAllocExtra = {}
 
 self.Info = {
 	Creator = "Kali",
-	Version = "3.2.0",
+	Version = "3.6.5",
 	StartDate = "01/23/2020",
-	LastUpdate = "02/05/2020",
+	LastUpdate = "12/21/2021",
 	ChangeLog = {
 		["1.0.0"] = "Initial release",
 		["1.5.0"] = "Added support for Argus draw functions",
@@ -30,7 +31,15 @@ self.Info = {
 		["2.8.0"] = "Added filled cross and donuts",
 		["3.0.0"] = "Rewrite/Cleanup",
 		["3.1.0"] = "Alpha %% now drawn correctly.",
-		["3.2.0"] = "Rewrite/Cleanup and added GUI options including show entity heading."
+		["3.2.0"] = "Rewrite/Cleanup and added GUI options including show entity heading.",
+		["3.2.4"] = "Quick fixes, fixed context menu for heading warnings, and fixed inner radius donuts.",
+		["3.2.5"] = "Reverted a few donut changes, will need to fix with overrides. Also fixed enabled not doing anything.",
+		["3.5.0"] = "A few iterations later, added gradient color support for enemy attacks, as well as always on attack range/melee range.",
+		["3.5.1"] = "Fixed the default gradient colors for enemy attacks, a debug variable, and created a new popout menu for editing colors which includes manually entering in values, a hue wheel, and a color palette.",
+		["3.5.2"] = "Added a few GetStrings for translations and fixed a color preview bug.",
+		["3.5.3"] = "Blacklist",
+		["3.5.4"] = "Recent Draws List",
+		["3.5.5"] = "Sage AoE Heals",
 	}
 }
 
@@ -65,6 +74,7 @@ self.Settings = {
 
 
 	DrawPlayerDot = true,
+	PlayerDotv2 = false,
 	DrawDotCombatOnly = false,
 	DrawDotInstanceOnly = false,
 	DotRGB = {r=1,g=0,b=0,a=1},
@@ -81,7 +91,6 @@ self.Settings = {
 	--DrawFriendlyOutRange = true,
 	DrawFriendlyLB = false,
 	--DrawSelfHealingOutline = true,
-	DrawAttackRange = true,
 
 	largeAoE = 30,
 	alphafill = {
@@ -118,9 +127,21 @@ self.Settings = {
 	},
 	fillRGB = {
 		enemy = {
-			r = 1,
-			g = 0,
-			b = 0
+			start = {
+				r = 0,
+				g = 188,
+				b = 212
+			},
+			mid = {
+				r = 255,
+				g = 152,
+				b = 0
+			},
+			finish = {
+				r = 213,
+				g = 0,
+				b = 0
+			},
 		},
 		healing = {
 			r = 0,
@@ -172,6 +193,44 @@ self.Settings = {
 		range = 4
 	},
 
+	DrawAttackRange = true,
+	AttackRangeOverrides = {
+		[FFXIV.JOBS.GUNBREAKER] = {3},
+		[FFXIV.JOBS.DANCER] = {5, 15, 25}
+	},
+	AlwaysShowAttackRange = false,
+	AlwaysShowMeleeRange = false,
+	DrawAutoAttackRange = false,
+	DrawIntercardinal = false,
+	IntercardinalRGB = {
+		r = 0.14117647058824,
+		g = 0.082352941176471,
+		b = 0.44313725490196,
+		a = 1,
+	},
+	DrawCardinal = false,
+	CardinalRGB = {
+		r = 0.66274509803922,
+		g = 0.10588235294118,
+		b = 0.050980392156863,
+		a = 1,
+	},
+	DrawRear = false,
+	RearColorRGB = {
+		r = 0.93725490196078,
+		g = 0.44705882352941,
+		b = 0.082352941176471,
+		a = 1
+	},
+	DrawTrueNorth = false,
+	TrueNorthRGB = {
+		r = 0.8431,
+		g = 0.9098,
+		b = 0.9412,
+		a = 1
+	},
+	ExtendLines = false,
+
 
 	UnknownConeAngle = 90,
 	UnknownDonutRadius = 5,
@@ -181,18 +240,42 @@ self.Settings = {
 	MaxTelegraphsFilled = 0,
 
 
-	HealingAoeActions = {124,133,186,206,207,208,803,825,1594,3362,3583,3600,3601,7439,8324,11406,12578,16015,16517,16534,16537,16543,16544,16546,16547,16550,16553,16558,17001,17152,17763,17785,18318,18945,18946,18947,18948,18950,18951},
+	HealingAoeActions = {124,131,133,186,206,207,208,803,825,1594,3362,3583,3600,3601,7439,8324,11406,12578,16015,16517,16534,16537,16543,16544,16546,16547,16550,16553,16558,17001,17152,17763,17785,18318,18945,18946,18947,18948,18950,18951,24286,24318},
 
 
 	DrawHeadingEntities = true,
 	showHeadingEntities = {
 		{
 			contentid = "8381",
-			customFront = 0,
-			customHitRadius = 0,
+			customFront = 5,
+			customHitRadius = 3,
 			mapid = 0,
 			name = "Nyx",
 			note = "Ahriman's in E2/E2S that inflicts Damage Down and Diabolic Curse on contact.",
+		},
+		{
+			contentid = "7109",
+			customFront = 50,
+			customHitRadius = 0,
+			mapid = 0,
+			name = "Missile",
+			note = "",
+		},
+		{
+			contentid = "6202",
+			customFront = 50,
+			customHitRadius = 0,
+			mapid = 0,
+			name = "Rearguard Mine",
+			note = "",
+		},
+		{
+			contentid = "6206",
+			customFront = 50,
+			customHitRadius = 4,
+			mapid = 0,
+			name = "Retuned Magitek Bit",
+			note = "",
 		},
 	},
 	showHeadingMinRadius = 1.5,
@@ -210,15 +293,36 @@ self.Settings = {
 		a = 0.5
 	},
 	showHeadingOutlineThickness = 6,
+	showHeadingUntargetableMovingEntities = true,
 
 
-	aoeIDUserBlacklist = {}, -- key = aoeID, value = w/e
+	aoeIDUserBlacklist = {
+		[9911] = "Heavensfall",
+		[9912] = "Heavensfall",
+	}, -- key = aoeID, value = w/e
 
 
 	syncVerticalPosHeight = {
 		near = 0.5,
 		above = 5,
 		below = 1
+	},
+
+	MarkPlayers = false,
+	PartySortOrder = {19,1,21,3,32,37,24,6,28,33,20,2,22,4,30,29,34,23,5,31,38,25,7,27,26,35,36,8,9,10,11,12,13,14,15,16,17,18},
+	MarkingOverhead = {
+		--[57] = "Purple Spread Circle (Large)",
+		[191] = "Granite Gaol"
+	},
+	MarkingActions = {
+		[645] = "Rock Throw",
+		[1181] = "Rock Throw",
+		[1652] = "透明：タイタン：岩の牢獄", -- Rock Throw / Transparent: Titan: Rock Prison
+		[1797] = "Rock Throw",
+		--[8193] = "Rock Throw",
+		--[11115] = "Rock Throw",
+		--[11116] = "Rock Throw",
+		--[16685] = "Rock Throw",
 	}
 }
 
@@ -233,7 +337,13 @@ self.Data = {
 	lastLineRGB = {},
 	lastLineThickness = 2,
 	DebugRecordings = {Directional={},Ground={}},
+	BlacklistRecorder = {},
 	ActionNameOmens = {},
+	URL = {
+		Action = [[https://raw.githubusercontent.com/xivapi/ffxiv-datamining/master/csv/Action.csv]],
+		Omen = [[https://raw.githubusercontent.com/xivapi/ffxiv-datamining/master/csv/Omen.csv]],
+		VFX = [[https://raw.githubusercontent.com/xivapi/ffxiv-datamining/master/csv/VFX.csv]],
+	},
 	--[[ Omen = {
 		[1] = "general_1bf",
 		[2] = "general02f",
@@ -793,7 +903,20 @@ self.Data = {
 		[13] = "Cone / Fan - No Padding",
 	},
 
-	aoeIDReactionBlacklist = {}, -- key == aoe ID, value = table containing map IDs as keys
+	aoeIDReactionBlacklist = { -- key == aoe ID, value = table containing map IDs as keys
+		[19921] = { -- reflected shining armor
+			[909] = true
+		},
+		[19893] = { -- reflected shining armor
+			[909] = true
+		},
+		[19850] = { -- reflected shining armor
+			[909] = true
+		},
+		[19905] = { -- reflected shining armor
+			[909] = true
+		},
+	},
 
 	DebugTypes = {
 		[1] = "Entity Casting Action Message",
@@ -802,11 +925,56 @@ self.Data = {
 	},
 	DebugLog = {},
 	editHeadingEntry = 0,
+	hiddenEntityHeading = {},
+	JobToName = {
+		[0] = "Adventurer",
+		[1] = "Gladiator",
+		[2] = "Pugilist",
+		[3] = "Marauder",
+		[4] = "Lancer",
+		[5] = "Archer",
+		[6] = "Conjurer",
+		[7] = "Thaumaturge",
+		[8] = "Carpenter",
+		[9] = "Blacksmith",
+		[10] = "Armorer",
+		[11] = "Goldsmith",
+		[12] = "Leatherworker",
+		[13] = "Weaver",
+		[14] = "Alchemist",
+		[15] = "Culinarian",
+		[16] = "Miner",
+		[17] = "Botanist",
+		[18] = "Fisher",
+		[19] = "Paladin",
+		[20] = "Monk",
+		[21] = "Warrior",
+		[22] = "Dragoon",
+		[23] = "Bard",
+		[24] = "White Mage",
+		[25] = "Black Mage",
+		[26] = "Arcanist",
+		[27] = "Summoner",
+		[28] = "Scholar",
+		[29] = "Rogue",
+		[30] = "Ninja",
+		[31] = "Machinist",
+		[32] = "Dark Knight",
+		[33] = "Astrologian",
+		[34] = "Samurai",
+		[35] = "Red Mage"
+	},
+	CurrentParty = {},
+	lastPartyCheck = 0,
+	marked = {},
+	newblacklistlabel = "",
+	newblacklistid = "0",
+
 }
 --local Data = self.Data
 
 self.GUI = {
-	WindowName = selfs.."##MainWindow",
+	WindowName = selfslong.."##MainWindow",
 	name = selfslong,
 	NavName = selfslong,
 	open = false,
@@ -868,7 +1036,7 @@ self.GUI = {
 			name = "Minion Forums",
 			icon = MinionPath .. [[\GUI\UI_Textures\minionblack.png]],
 			link = [[http://www.mmominion.com/thread-21145.html]],
-			tooltip = "Visit MMOMinion Forums to view this software's topic page.",
+			tooltip = "Visit MMOMinion Forums to view this module's topic page.",
 			lasthover = 0,
 			size = { x = 25, y = 25}
 		},
@@ -996,7 +1164,7 @@ end
 local save = self.save
 
 function self.Initialize()
-	self.GUI.main_tabs = GUI_CreateTabs("Telegraphs,Markers,Extras,Debug")
+	self.GUI.main_tabs = GUI_CreateTabs("Telegraphs,Blacklist,Recent Draws,Extras,Debug")
 	local Settings = self.Settings
 	local ModuleTable = self.GUI
 	local MainIcon = ImageFolder .. [[MoogleStuff.png]]
@@ -1082,15 +1250,17 @@ function self.GameState()
 end
 local GameState = self.GameState
 
-local function Sign(value)
-	return (value >= 0 and 1) or -1
+function self.Distance2D(pos,pos2,IgnoreRadius)
+	if valid(2,pos,pos2) then
+		if IgnoreRadius or not pos2.pos then
+			return math.sqrt( math.pow(( pos2.x - pos.x ),2 ) + math.pow(( pos2.z - pos.z ),2 ))
+		else
+			local pos,pos2,radius,radius2 = pos.pos or pos, pos2.pos or pos2, pos.hitradius or 0.5, pos2.hitradius or 0.5
+			return math.sqrt( math.pow(( pos2.x - pos.x ),2 ) + math.pow(( pos2.z - pos.z ),2 )) - (radius + radius2)
+		end
+	end
 end
-
-local function Round(value, bracket)
-	bracket = bracket or 1
-	local floor = math.floor
-	return floor(value / bracket + Sign(value) * 0.5) * bracket
-end
+local Distance2D = self.Distance2D
 
 function self.Distance3D(pos,pos2,IgnoreRadius)
 	if valid(2,pos,pos2) then
@@ -1114,53 +1284,90 @@ function self.IsFriend(entity)
 end
 local IsFriend = self.IsFriend
 
-function self.WriteOutput(tbl)
-	FileWrite(DebugOutput, tostring(tbl), true)
-end
-local WriteOutput = self.WriteOutput
+--function self.WriteOutput(tbl)
+--	FileWrite(DebugOutput, tostring(tbl), true)
+--end
+--local WriteOutput = self.WriteOutput
 
-function self.DebugRecord(aoe,aoeType,entity,Note)
-	if self.Settings.DebugRecord then
-		local ID = aoe.aoeID
-		local tbl = self.Data.DebugRecordings[aoeType]
-		if not tbl[ID] then
-			tbl[ID] = aoe
-			local t,ActionInfo = tbl[ID],self.Data.ActionInfo
-			t.Time = os.date("%X")
-			if valid(entity) then
-				t.EntityName = entity.name
-				t.EntityContentID = entity.contentid
-				t.EntityFriendly = entity.friendly
-				t.EntityAttackable = entity.attackable
-				t.EntityTargetable = entity.targetable
-				t.EntityHeading = entity.pos.hn
-			end
-			if valid(ActionInfo) then
-				local info = ActionInfo[ID]
-				if valid(info) then
-					-- omen = info[1]
-					t.VFXTargetID = info[2]
-					t.AnimationStartTargetID = info[3]
-					t.AnimationEndTargetID = info[4]
-					t.ActionTimelineHitTargetID = info[5]
-					t.AffectsPosition = info[6]
-					t.CanTargetSelf = info[7]
-					t.CanTargetHostile = info[8]
-					t.CanTargetFriendly = info[9]
-					t.TargetArea = info[10]
-					-- name = info[11]
-				end
-			end
-			t.EntityNotes = Note
-			t.OmenID = t.aoeType
-			t.OmenStr = Data.Omen[t.aoeType or 0]
-			t.map = "["..Player.localmapid.."] "..GetMapName(Player.localmapid)
-			WriteOutput(t)
-			d("[MoogleTelegraphs] Added ["..ID.."] "..aoe.aoeName..", "..tostring(Note))
-		end
+--function self.DebugRecord(aoe,aoeType,entity,Note)
+--	if self.Settings.DebugRecord then
+--		local ID = aoe.aoeID
+--		local tbl = self.Data.DebugRecordings[aoeType]
+--		if not tbl[ID] then
+--			tbl[ID] = aoe
+--			local t,ActionInfo = tbl[ID],self.Data.ActionInfo
+--			t.Time = os.date("%X")
+--			if valid(entity) then
+--				t.EntityName = entity.name
+--				t.EntityContentID = entity.contentid
+--				t.EntityFriendly = entity.friendly
+--				t.EntityAttackable = entity.attackable
+--				t.EntityTargetable = entity.targetable
+--				t.EntityHeading = entity.pos.hn
+--			end
+--			if valid(ActionInfo) then
+--				local info = ActionInfo[ID]
+--				if valid(info) then
+--					-- omen = info[1]
+--					t.VFXTargetID = info[2]
+--					t.AnimationStartTargetID = info[3]
+--					t.AnimationEndTargetID = info[4]
+--					t.ActionTimelineHitTargetID = info[5]
+--					t.AffectsPosition = info[6]
+--					t.CanTargetSelf = info[7]
+--					t.CanTargetHostile = info[8]
+--					t.CanTargetFriendly = info[9]
+--					t.TargetArea = info[10]
+--					-- name = info[11]
+--				end
+--			end
+--			t.EntityNotes = Note
+--			t.OmenID = t.aoeType
+--			t.OmenStr = Data.Omen[t.aoeType or 0]
+--			t.map = "["..Player.localmapid.."] "..GetMapName(Player.localmapid)
+--			WriteOutput(t)
+--			d("[MoogleTelegraphs] Added ["..ID.."] "..aoe.aoeName..", "..tostring(Note))
+--		end
+--	end
+--end
+--local DebugRecord = self.DebugRecord
+
+function self.ColorGradient(extra,fill)
+	local colorTable = self.Settings.fillRGB.enemy
+	local start,mid,finish = colorTable.start, colorTable.mid, colorTable.finish
+	local r,g,b,a
+	local pctComplete = extra.channeltime / extra.casttime
+	if pctComplete <= 0.5 then
+		r, g, b, a =
+		TensorCore.getColorGradient(
+				start.r / 255,
+				start.g / 255,
+				start.b / 255,
+				fill,
+				mid.r / 255,
+				mid.g / 255,
+				mid.b / 255,
+				fill,
+				pctComplete / 0.5
+		)
+	else
+		r, g, b, a =
+		TensorCore.getColorGradient(
+				mid.r / 255,
+				mid.g / 255,
+				mid.b / 255,
+				fill,
+				finish.r / 255,
+				finish.g / 255,
+				finish.b / 255,
+				fill,
+				(pctComplete - 0.5) / 0.5,
+				true
+		)
 	end
+	return { r=r, g=g, b=b, a=a },{ r=r, g=g, b=b }
 end
-local DebugRecord = self.DebugRecord
+local ColorGradient = self.ColorGradient
 
 function self.fill(fillCount,maxFillCount,size,channeltime,casttime)
 	if maxFillCount == 0 or fillCount <= maxFillCount then
@@ -1170,167 +1377,276 @@ end
 local fill = self.fill
 
 function self.DrawCone(aoe,extra,angle)
+	if extra.fillCount > extra.maxFillCount and extra.maxFillCount ~= 0 then return end
 	local Radius = aoe.aoeRadius or aoe.aoeLength
 	local Segments = (function() local seg = ((Radius * 2) * math.pi) / extra.verticesSpacing if seg <= extra.maxSegments then return seg else return extra.maxSegments end end)()
-	local fill,pos = fill(extra.fillCount,extra.maxFillCount,(function() if Radius < extra.largeAoE then return extra.small else return extra.large end end)(),extra.channeltime,extra.casttime), extra.pos
+	local fill,pos = fill(extra.fillCount,extra.maxFillCount,extra.small,extra.channeltime,extra.casttime), extra.pos
+	local enemyFill,outlineEnemy = ColorGradient(extra,fill)
+
 	Argus.addConeFilled(pos.x, pos.y, pos.z, Radius, math.rad(angle), pos.h, Segments,
-			extra.friendly and GUI:ColorConvertFloat4ToU32(extra.friendFill.r, extra.friendFill.g, extra.friendFill.b, 1) or
-					GUI:ColorConvertFloat4ToU32(extra.enemyFill.r, extra.enemyFill.g, extra.enemyFill.b, fill),
-			extra.friendly and GUI:ColorConvertFloat4ToU32(extra.outlineFriend.r, extra.outlineFriend.g, extra.outlineFriend.b, extra.outlineFriend.a) or
-					GUI:ColorConvertFloat4ToU32(extra.outlineEnemy.r, extra.outlineEnemy.g, extra.outlineEnemy.b, extra.outlineEnemy.a),
-			extra.friendly and extra.outlineThicknessFriend or extra.outlineThicknessEnemy)
+						extra.friendly and 	GUI:ColorConvertFloat4ToU32(extra.friendFill.r, extra.friendFill.g, extra.friendFill.b, fill)
+											or GUI:ColorConvertFloat4ToU32(enemyFill.r, enemyFill.g, enemyFill.b, enemyFill.a),
+						extra.friendly and 	GUI:ColorConvertFloat4ToU32(extra.outlineFriend.r, extra.outlineFriend.g, extra.outlineFriend.b, extra.outlineFriend.a)
+											or GUI:ColorConvertFloat4ToU32(outlineEnemy.r, outlineEnemy.g, outlineEnemy.b, extra.outlineEnemy.a),
+						extra.friendly and extra.outlineThicknessFriend or extra.outlineThicknessEnemy
+					)
 end
 local DrawCone = self.DrawCone
 
 function self.DrawDonut(aoe,extra,radiusInner)
+	if extra.fillCount > extra.maxFillCount and extra.maxFillCount ~= 0 then return end
 	local Radius = aoe.aoeRadius or aoe.aoeLength
 	local Segments = (function() local seg = ((Radius * 2) * math.pi) / extra.verticesSpacing if seg <= extra.maxSegments then return seg else return extra.maxSegments end end)()
 	local fill,pos = fill(extra.fillCount,extra.maxFillCount,(function() if Radius < extra.largeAoE then return extra.small else return extra.large end end)(),extra.channeltime,extra.casttime), extra.pos
-	Argus.addDonutFilled(pos.x, pos.y, pos.z, radiusInner or extra.hitradius, Radius, Segments,
+	local enemyFill,outlineEnemy = ColorGradient(extra,fill)
+	--d("["..aoe.aoeID.."] "..tostring(aoe.aoeName)..", Radius Inner: "..tostring(radiusInner)..", Hit Radius: "..tostring(extra.hitradius))
+	Argus.addDonutFilled(pos.x, pos.y, pos.z, (function()
+		if radiusInner then
+			if radiusInner ~= 0 then return radiusInner
+			elseif extra.hitradius~= 0 then return extra.hitradius + 2
+			else return self.Settings.UnknownDonutRadius end
+		elseif extra.hitradius and extra.hitradius~= 0 then return extra.hitradius
+		else return self.Settings.UnknownDonutRadius end end)(), Radius, Segments,
 			extra.friendly and GUI:ColorConvertFloat4ToU32(extra.friendFill.r, extra.friendFill.g, extra.friendFill.b, fill) or
-					GUI:ColorConvertFloat4ToU32(extra.enemyFill.r, extra.enemyFill.g, extra.enemyFill.b, fill),
+					GUI:ColorConvertFloat4ToU32(enemyFill.r, enemyFill.g, enemyFill.b, enemyFill.a),
 			extra.friendly and GUI:ColorConvertFloat4ToU32(extra.outlineFriend.r, extra.outlineFriend.g, extra.outlineFriend.b, extra.outlineFriend.a) or
-					GUI:ColorConvertFloat4ToU32(extra.outlineEnemy.r, extra.outlineEnemy.g, extra.outlineEnemy.b, extra.outlineEnemy.a),
+					GUI:ColorConvertFloat4ToU32(outlineEnemy.r, outlineEnemy.g, outlineEnemy.b, extra.outlineEnemy.a),
 			extra.friendly and extra.outlineThicknessFriend or extra.outlineThicknessEnemy)
 end
 local DrawDonut = self.DrawDonut
 
 function self.DrawCircle(aoe,extra)
+	if extra.fillCount > extra.maxFillCount and extra.maxFillCount ~= 0 then return end
 	local Radius = aoe.aoeRadius or aoe.aoeLength
 	local Segments = (function() local seg = ((Radius * 2) * math.pi) / extra.verticesSpacing if seg <= extra.maxSegments then return seg else return extra.maxSegments end end)()
-	local fill,pos = fill(extra.fillCount,extra.maxFillCount,(function() if Radius < extra.largeAoE then return extra.small else return extra.large end end)(),extra.channeltime,extra.casttime), extra.pos
+	local fill,pos = fill(extra.fillCount,extra.maxFillCount,(function() if tonumber(Radius) < tonumber(extra.largeAoE) then return extra.small else return extra.large end end)(),extra.channeltime,extra.casttime), extra.pos
+	local enemyFill,outlineEnemy = ColorGradient(extra,fill)
 	Argus.addCircleFilled(pos.x, pos.y, pos.z, Radius, Segments,
 			extra.isHealing and GUI:ColorConvertFloat4ToU32(extra.healingFill.r, extra.healingFill.g, extra.healingFill.b, fill) or
 				extra.friendly and GUI:ColorConvertFloat4ToU32(extra.friendFill.r, extra.friendFill.g, extra.friendFill.b, fill) or
-				GUI:ColorConvertFloat4ToU32(extra.enemyFill.r, extra.enemyFill.g, extra.enemyFill.b, fill),
+				GUI:ColorConvertFloat4ToU32(enemyFill.r, enemyFill.g, enemyFill.b, enemyFill.a),
 			extra.isHealing and GUI:ColorConvertFloat4ToU32(extra.outlineHealing.r, extra.outlineHealing.g, extra.outlineHealing.b, extra.outlineHealing.a) or
 				extra.friendly and GUI:ColorConvertFloat4ToU32(extra.outlineFriend.r, extra.outlineFriend.g, extra.outlineFriend.b, extra.outlineFriend.a) or
-				GUI:ColorConvertFloat4ToU32(extra.outlineEnemy.r, extra.outlineEnemy.g, extra.outlineEnemy.b, extra.outlineEnemy.a),
+				GUI:ColorConvertFloat4ToU32(outlineEnemy.r, outlineEnemy.g, outlineEnemy.b, extra.outlineEnemy.a),
 			extra.friendly and extra.outlineThicknessFriend or extra.outlineThicknessEnemy)
 end
 local DrawCircle = self.DrawCircle
 
 function self.DrawRect(aoe,extra)
-	local fill = fill(extra.fillCount,extra.maxFillCount,(function() if aoe.aoeWidth < extra.largeAoE then return extra.small else return extra.large end end)(),extra.channeltime,extra.casttime)
-	local pos = extra.pos
+	if extra.fillCount > extra.maxFillCount and extra.maxFillCount ~= 0 then return end
+	local fill,pos = fill(extra.fillCount,extra.maxFillCount,(function() if tonumber(aoe.aoeWidth) < tonumber(extra.largeAoE) then return extra.small else return extra.large end end)(),extra.channeltime,extra.casttime),extra.pos
+	local enemyFill,outlineEnemy = ColorGradient(extra,fill)
 	Argus.addRectFilled(pos.x, pos.y, pos.z, aoe.aoeLength, aoe.aoeWidth, pos.h,
 			extra.friendly and GUI:ColorConvertFloat4ToU32(extra.friendFill.r, extra.friendFill.g, extra.friendFill.b, fill) or
-					GUI:ColorConvertFloat4ToU32(extra.enemyFill.r, extra.enemyFill.g, extra.enemyFill.b, fill),
+					GUI:ColorConvertFloat4ToU32(enemyFill.r, enemyFill.g, enemyFill.b, enemyFill.a),
 			extra.friendly and GUI:ColorConvertFloat4ToU32(extra.outlineFriend.r, extra.outlineFriend.g, extra.outlineFriend.b, extra.outlineFriend.a) or
-					GUI:ColorConvertFloat4ToU32(extra.outlineEnemy.r, extra.outlineEnemy.g, extra.outlineEnemy.b, extra.outlineEnemy.a),
+					GUI:ColorConvertFloat4ToU32(outlineEnemy.r, outlineEnemy.g, outlineEnemy.b, extra.outlineEnemy.a),
 			extra.friendly and extra.outlineThicknessFriend or extra.outlineThicknessEnemy)
 
 end
 local DrawRect = self.DrawRect
 
 function self.DrawCross(aoe,extra)
-	local fill,pos = fill(extra.fillCount,extra.maxFillCount,(function() if aoe.aoeWidth < extra.largeAoE then return extra.small else return extra.large end end)(),extra.channeltime,extra.casttime), extra.pos
-	Argus.addDonutFilled(pos.x, pos.y, pos.z, aoe.aoeLength, aoe.aoeWidth, pos.h,
+	if extra.fillCount > extra.maxFillCount and extra.maxFillCount ~= 0 then return end
+	local fill,pos = fill(extra.fillCount,extra.maxFillCount,(function() if tonumber(aoe.aoeWidth) < tonumber(extra.largeAoE) then return extra.small else return extra.large end end)(),extra.channeltime,extra.casttime), extra.pos
+	local enemyFill,outlineEnemy = ColorGradient(extra,fill)
+	Argus.addCrossFilled(pos.x, pos.y, pos.z, aoe.aoeLength, aoe.aoeWidth, pos.h,
 			extra.friendly and GUI:ColorConvertFloat4ToU32(extra.friendFill.r, extra.friendFill.g, extra.friendFill.b, fill) or
-					GUI:ColorConvertFloat4ToU32(extra.enemyFill.r, extra.enemyFill.g, extra.enemyFill.b, fill),
+					GUI:ColorConvertFloat4ToU32(enemyFill.r, enemyFill.g, enemyFill.b, enemyFill.a),
 			extra.friendly and GUI:ColorConvertFloat4ToU32(extra.outlineFriend.r, extra.outlineFriend.g, extra.outlineFriend.b, extra.outlineFriend.a) or
-					GUI:ColorConvertFloat4ToU32(extra.outlineEnemy.r, extra.outlineEnemy.g, extra.outlineEnemy.b, extra.outlineEnemy.a),
+					GUI:ColorConvertFloat4ToU32(outlineEnemy.r, outlineEnemy.g, outlineEnemy.b, extra.outlineEnemy.a),
 			extra.friendly and extra.outlineThicknessFriend or extra.outlineThicknessEnemy)
 end
 local DrawCross = self.DrawCross
-
 
 local valid = table.valid
 function self.Update()
 	local Data,Settings,Override = self.Data,self.Settings,self.Override
 	if Data.loaded then
-		local p,aoes = Player, { Ground = Argus.getCurrentGroundAOEs(), Directional = Argus.getCurrentDirectionalAOEs() }
-		local DrawHealing,DrawFriendly,DrawLB = Settings.DrawHealingAoE,Settings.DrawFriendlyAoE,Settings.DrawFriendlyLB
-		local alphafill,fillRGB,largeAoE,maxSegments,outlineRGB,outlineThickness,UnknownConeAngle,UnknownDonutRadius = Settings.alphafill,Settings.fillRGB,Settings.largeAoE,Settings.maxSegments,Settings.outlineRGB,Settings.outlineThickness,Settings.UnknownConeAngle,Settings.UnknownDonutRadius
-		local smallEnemy,largeEnemy,smallHealing,largeHealing,smallFriend,largeFriend,enemyFill,healingFill,friendFill,outlineEnemy,outlineHealing,outlineFriend,outlineThicknessEnemy,outlineThicknessHealing,outlineThicknessFriend = alphafill.enemy.small,alphafill.enemy.large,alphafill.healing.small,alphafill.healing.large,alphafill.friend.small,alphafill.friend.large,fillRGB.enemy,fillRGB.healing,fillRGB.friend,outlineRGB.enemy,outlineRGB.healing,outlineRGB.friend,outlineThickness.enemy,outlineThickness.healing,outlineThickness.friend
-		local fillCount,maxFillCount = 0,Settings.MaxTelegraphsFilled
-		for source,tbl in pairs(aoes) do
-			if valid(tbl) then for id,aoe in pairs(tbl) do
-				local aoeID,mapID = aoe.aoeID, p.localmapid; local userBL,reactionBL = Settings.aoeIDUserBlacklist[aoeID],Data.aoeIDReactionBlacklist[aoeID] or {}
-				if not userBL and not reactionBL[mapID] then
-					local pos,ppos,maxDrawRange = {x = aoe.x, y = aoe.y, z = aoe.z, h = aoe.heading}, p.pos, Settings.MaxTelegraphDrawRange; local diff,sync = pos.y - ppos.y,Settings.syncVerticalPosHeight
-					if InInstance() then -- TODO: If telegraph raycasting gets supported, this can go away.
-						if diff >= 0 then if diff <= sync.near then pos.y = ppos.y
-						elseif diff >= sync.above then pos.y = ppos.y end
-						elseif diff < sync.below then pos.y = ppos.y end
-					end
-					if maxDrawRange == 0 or Distance3D(pos,ppos) <= maxDrawRange then
-						if not Override[aoeID] then
-							local entity = EntityList:Get(id)
-							local friendly,cinfo,hitradius = (function() if valid(entity) then return IsFriend(entity) or false, entity.castinginfo, (function() local hitradius = entity.hitradius if hitradius < 1.5 then
-								local el = EntityList("name="..tostring(entity.name))
-								if valid(el) then for _,e in pairs(el) do
-									local hitrad = e.hitradius
-									if hitrad > hitradius then hitradius = hitrad end
-								end end
-							end return hitradius end)() else return false,false,0 end end)()
-							if (not friendly or (DrawHealing or DrawFriendly)) and (not Data.LB[aoeID] or DrawLB) then -- TODO: add logic to not draw if within range if healing or friendly
+		if Settings.enable then
+			local p,aoes = Player, { Ground = Argus.getCurrentGroundAOEs(true), Directional = Argus.getCurrentDirectionalAOEs(true) }
+			local DrawHealing,DrawFriendly,DrawLB = Settings.DrawHealingAoE,Settings.DrawFriendlyAoE,Settings.DrawFriendlyLB
+			local alphafill,fillRGB,largeAoE,maxSegments,outlineRGB,outlineThickness,UnknownConeAngle,UnknownDonutRadius = Settings.alphafill,Settings.fillRGB,Settings.largeAoE,Settings.maxSegments,Settings.outlineRGB,Settings.outlineThickness,Settings.UnknownConeAngle,Settings.UnknownDonutRadius
+			local smallEnemy,largeEnemy,smallHealing,largeHealing,smallFriend,largeFriend,enemyFill,healingFill,friendFill,outlineEnemy,outlineHealing,outlineFriend,outlineThicknessEnemy,outlineThicknessHealing,outlineThicknessFriend = alphafill.enemy.small,alphafill.enemy.large,alphafill.healing.small,alphafill.healing.large,alphafill.friend.small,alphafill.friend.large,fillRGB.enemy,fillRGB.healing,fillRGB.friend,outlineRGB.enemy,outlineRGB.healing,outlineRGB.friend,outlineThickness.enemy,outlineThickness.healing,outlineThickness.friend
+			local fillCount,maxFillCount = 0,Settings.MaxTelegraphsFilled
+			for source,tbl in pairs(aoes) do
+				if valid(tbl) then for i = 1, #tbl do
+					local id, aoe = tbl[i].entityID, tbl[i]
+					local aoeID,mapID = aoe.aoeID, p.localmapid; local userBL,reactionBL = Settings.aoeIDUserBlacklist[aoeID],Data.aoeIDReactionBlacklist[aoeID] or {}
+					if not userBL and not reactionBL[mapID] then
+						local pos,ppos,maxDrawRange = {x = aoe.x, y = aoe.y, z = aoe.z, h = aoe.heading}, p.pos, Settings.MaxTelegraphDrawRange; local diff,sync = pos.y - ppos.y,Settings.syncVerticalPosHeight
+						--if InInstance() then -- TODO: If telegraph raycasting gets supported, this can go away.
+						--	if diff >= 0 then if diff <= sync.near then pos.y = ppos.y
+						--	elseif diff >= sync.above then pos.y = ppos.y end
+						--	elseif diff < sync.below then pos.y = ppos.y end
+						--end
+						if maxDrawRange == 0 or Distance3D(pos,ppos) <= maxDrawRange then
+							if not Override[aoeID] then
+								local entity = EntityList:Get(id)
+								local friendly,cinfo,hitradius = (function() if valid(entity) then return IsFriend(entity) or false, entity.castinginfo, (function() local hitradius = entity.hitradius if hitradius < 1.5 then
+									local el = EntityList("name="..tostring(entity.name))
+									if valid(el) then for _,e in pairs(el) do
+										local hitrad = e.hitradius
+										if hitrad > hitradius then hitradius = hitrad end
+									end end
+								end return hitradius end)() else return false,false,0 end end)()
+								if (not friendly or (DrawHealing or DrawFriendly)) and (not Data.LB[aoeID] or DrawLB) then -- TODO: add logic to not draw if within range if healing or friendly
 
-								local pass = true
-								local small,large,isHealing
-								if friendly and (DrawHealing or DrawFriendly) then
-									if DrawHealing and table.contains(Settings.HealingAoeActions,aoeID) then
-										local party = MEntityList("myparty")
-										if id == p.id or (valid(party) and party[id]) then
-											if id == p.id then
-												if Settings.DrawHealingOutlineIfHealer then
+									local pass = true
+									local small,large,isHealing
+									if friendly and (DrawHealing or DrawFriendly) then
+										if DrawHealing and table.contains(Settings.HealingAoeActions,aoeID) then
+											local party = MEntityList("myparty")
+											if id == p.id or (valid(party) and party[id]) then
+												if id == p.id then
+													if Settings.DrawHealingOutlineIfHealer then
+														small,large = {min=0,max=0},{min=0,max=0}
+														isHealing = true
+													else
+														small,large = alphafill.healing.small,alphafill.healing.large
+														isHealing = true
+													end
+												elseif (Distance3D(pos,ppos) + p.hitradius) > (aoe.aoeRadius or aoe.aoeLength) then
+													if Settings.DrawHealingOutOfRange then
+														small,large = alphafill.healing.small,alphafill.healing.large
+														isHealing = true
+													else pass = false end
+												elseif Settings.DrawHealingCirclesOutline then
 													small,large = {min=0,max=0},{min=0,max=0}
 													isHealing = true
 												else pass = false end
-											elseif (Distance3D(pos,ppos) + p.hitradius) > (aoe.aoeRadius or aoe.aoeLength) then
-												if Settings.DrawHealingOutOfRange then
-													small,large = alphafill.healing.small,alphafill.healing.large
-													isHealing = true
+											else pass = false end
+										elseif not table.contains(Settings.HealingAoeActions,aoeID) then
+											if table.contains(Data.LB,aoeID) then
+												if Settings.DrawFriendlyLB then
+													small,large = alphafill.friend.small,alphafill.friend.large
 												else pass = false end
-											elseif Settings.DrawHealingCirclesOutline then
-												small,large = {min=0,max=0},{min=0,max=0}
-												isHealing = true
-											else pass = false end
-										else pass = false end
-									elseif not table.contains(Settings.HealingAoeActions,aoeID) then
-										if table.contains(Data.LB,aoeID) then
-											if Settings.DrawFriendlyLB then
+											elseif DrawFriendly then
 												small,large = alphafill.friend.small,alphafill.friend.large
-											else pass = false end
+											else
+												pass = false
+											end
 										else
-											small,large = alphafill.friend.small,alphafill.friend.large
+											pass = false
 										end
 									else
-										pass = false
+										small,large = alphafill.enemy.small,alphafill.enemy.large
 									end
-								else
-									small,large = alphafill.enemy.small,alphafill.enemy.large
-								end
 
-								if pass then
-									local casttime,channeltime,channeltargetid = (function() if valid(cinfo) then return cinfo.casttime,cinfo.channeltime,cinfo.channeltargetid else return 0,0,0 end end)()
-									local aoeCastType,Omen,Width,extra = aoe.aoeCastType, aoe.aoeEffectInfo.aoeEffectName, tonumber(aoe.aoeWidth), { entity = entity, pos = pos, friendly = friendly, isHealing = isHealing, small = small, large = large, largeAoE = Settings.largeAoE, hitradius = hitradius, fillCount = fillCount, maxFillCount = maxFillCount, verticesSpacing = Settings.verticesSpacing, maxSegments = Settings.maxSegments, casttime = casttime, channeltime = channeltime, channeltargetid = channeltargetid, smallEnemy = smallEnemy, largeEnemy = largeEnemy, smallHealing = smallHealing, largeHealing = largeHealing, smallFriend = smallFriend, largeFriend = largeFriend, enemyFill = enemyFill, healingFill = healingFill, friendFill = friendFill, outlineEnemy = outlineEnemy, outlineHealing = outlineHealing, outlineFriend = outlineFriend, outlineThicknessEnemy = outlineThicknessEnemy, outlineThicknessHealing = outlineThicknessHealing, outlineThicknessFriend = outlineThicknessFriend }
-									if Width > 0 then
-										if aoeCastType == 11 then -- Cross
-											DrawCross( aoe, extra ) fillCount = fillCount + 1
-										else -- Line
-											DrawRect( aoe, extra ) fillCount = fillCount + 1
-										end
-									else
-										local OmenInfo = Omen:gsub("o",""):sub(6,-1):match("%D(%d+)%D") or ""
-										if #OmenInfo == 4 or Omen:sub(6,-1):match("don") or Omen:sub(6,-1):match("sircle") or aoeCastType == 10 then -- Donut
-											DrawDonut(aoe, extra, tonumber(OmenInfo:sub(-2)) or 0 ) fillCount = fillCount + 1
-										elseif #OmenInfo == 3 or Omen:sub(6,-1):match("fan") or is(aoeCastType,{3,13}) then -- Cone
-											DrawCone(aoe, extra, (function() if (tonumber(OmenInfo) or 0) > 0 then return tonumber(OmenInfo) else return UnknownConeAngle end end)() ) fillCount = fillCount + 1
+									if pass then
+										local casttime,channeltime,channeltargetid = (function() if valid(cinfo) then return cinfo.casttime,cinfo.channeltime,cinfo.channeltargetid else return 0,0,0 end end)()
+										local aoeCastType,Omen,Width = aoe.aoeCastType, aoe.aoeEffectInfo.aoeEffectName, tonumber(aoe.aoeWidth)
+
+										preAllocExtra.entity = entity 
+										preAllocExtra.pos = pos
+										preAllocExtra.friendly = friendly
+										preAllocExtra.isHealing = isHealing
+										preAllocExtra.small = small
+										preAllocExtra.large = large
+										preAllocExtra.largeAoE = Settings.largeAoE
+										preAllocExtra.hitradius = hitradius
+										preAllocExtra.fillCount = fillCount
+										preAllocExtra.maxFillCount = maxFillCount
+										preAllocExtra.verticesSpacing = Settings.verticesSpacing
+										preAllocExtra.maxSegments = Settings.maxSegments
+										preAllocExtra.casttime = casttime
+										preAllocExtra.channeltime = channeltime
+										preAllocExtra.channeltargetid = channeltargetid
+										preAllocExtra.smallEnemy = smallEnemy
+										preAllocExtra.largeEnemy = largeEnemy
+										preAllocExtra.smallHealing = smallHealing
+										preAllocExtra.largeHealing = largeHealing
+										preAllocExtra.smallFriend = smallFriend
+										preAllocExtra.largeFriend = largeFriend
+										preAllocExtra.enemyFill = enemyFill
+										preAllocExtra.healingFill = healingFill
+										preAllocExtra.friendFill = friendFill
+										preAllocExtra.outlineEnemy = outlineEnemy
+										preAllocExtra.outlineHealing = outlineHealing
+										preAllocExtra.outlineFriend = outlineFriend
+										preAllocExtra.outlineThicknessEnemy = outlineThicknessEnemy
+										preAllocExtra.outlineThicknessHealing = outlineThicknessHealing
+										preAllocExtra.outlineThicknessFriend = outlineThicknessFriend
+
+										if Width > 0 or aoeCastType == 11 then
+											if aoeCastType == 11 then -- Cross
+												fillCount = fillCount + 1
+												preAllocExtra.fillCount = fillCount
+												DrawCross( aoe, preAllocExtra )
+											else -- Line
+												fillCount = fillCount + 1
+												preAllocExtra.fillCount = fillCount
+												DrawRect( aoe, preAllocExtra )
+											end
 										else
-											DrawCircle( aoe, extra ) fillCount = fillCount + 1
+											local str = Omen:gsub("o",""):sub(6,-1) or ""
+											local OmenInfo = str:match("%D(%d+)%D") or ""
+											if #OmenInfo == 4 or str:match("don") or str:match("sircle") or aoeCastType == 10 then -- Donut
+												fillCount = fillCount + 1
+												preAllocExtra.fillCount = fillCount
+												DrawDonut(aoe, preAllocExtra, tonumber(OmenInfo:sub(-2)) or 0 )
+											elseif (#OmenInfo == 3 and not aoe.isAreaTarget) or str:match("fan") or is(aoeCastType,{3,13}) then -- Cone
+												fillCount = fillCount + 1
+												preAllocExtra.fillCount = fillCount
+												DrawCone(aoe, preAllocExtra, (function() if (tonumber(OmenInfo) or 0) > 0 then return tonumber(OmenInfo) else return UnknownConeAngle end end)() )
+											else
+												fillCount = fillCount + 1
+												preAllocExtra.fillCount = fillCount
+												DrawCircle( aoe, preAllocExtra )
+											end
+										end
+
+										if not self.Data.BlacklistRecorder[aoeID] then
+											self.Data.BlacklistRecorder[aoeID] = Player.localmapid
 										end
 									end
+								end
+							else
+								Override[aoeID]() -- TODO: Override Logic
+							end
+						end
+					end
+				end end
+			end
+			if Settings.MarkPlayers then
+				if TimeSince(Data.lastPartyCheck) > 30000 and not Busy() then Data.lastPartyCheck = Now() SendTextCommand("/partysort")
+					--PartySortOrder = {19,1,21,3,32,37,24,6,28,33,20,2,22,4,30,29,34,23,5,
+					--                  31,38,25,7,27,26,35,36,8,9,10,11,12,13,14,15,16,17,18}
+					local party,PT = EntityList.myparty,{[p.name] = 1}
+					if valid(party) then
+						local pt,order = {},Settings.PartySortOrder
+						for _,member in pairs(party) do
+							if member.id~=p.id then
+								local job = member.job
+								if not pt[job] then pt[job] = {} end
+								table.insert(pt[job],member)
+							end
+						end
+						for i=1,#order do
+							local jobid = order[i]
+							local entry = pt[jobid]
+							if entry then
+								table.sort(entry,function(a,b) return a.id > b.id end)
+								for e=1,#entry do
+									PT[entry[e].name] = (table.size(PT) + 1)
 								end
 							end
-						else
-							Override[aoeID]() -- TODO: Override Logic
+						end
+					end
+					Data.CurrentParty = PT
+				end
+				local party,marked = Data.CurrentParty,Data.marked
+				if valid(marked) then
+					for name,time in pairs(marked) do
+						if TimeSince(time) > 15000 then
+							SendTextCommand([[/marking clear <]]..party[name]..[[>]])
+							marked[name] = nil
 						end
 					end
 				end
-			end end
+			end
+			if self.GUI.open ~= Settings.open then Settings.open = self.GUI.open end save()
 		end
-		if self.GUI.open ~= Settings.open then Settings.open = self.GUI.open end save()
 	elseif not FolderExists(ModulePath) then
 		-- Changing ModulePath to the current directory, in case the user renamed the folder --
 		local lastclip = ""
@@ -1351,26 +1667,65 @@ function self.Update()
 		end
 		-- Changing ModulePath to the current directory, in case the user renamed the folder --
 	else
+		local defaultHealingAoeActions = table.deepcopy(self.Settings.HealingAoeActions) -- dirty way to update new healing actions
 		LoadSettings()
+		for _,id in pairs(defaultHealingAoeActions) do
+			if not table.contains(self.Settings.HealingAoeActions,id) then
+				table.insert(self.Settings.HealingAoeActions,id)
+				save()
+			end
+		end
 		self.GUI.open = Settings.open
 		Data.loaded = true
 	end
-	if #Data.DebugLog > Settings.DebugLogLimit then table.remove(Data.DebugLog,1) end
+	--if #Data.DebugLog > Settings.DebugLogLimit then table.remove(Data.DebugLog,1) end
 end
 
 Argus.registerOnEntityCast(function(entityID, actionID)
-	local entity = EntityList:Get(entityID)
+	local entity,action,data,settings = EntityList:Get(entityID),ActionList:Get(1,actionID),self.Data,self.Settings
 	if valid(entity) and entity.chartype ~= 4 and entity.chartype ~= 2 then
 		local action,name,heading,cinfo = ActionList:Get(1,actionID),entity.name or "", entity.pos.h or 0,entity.castinginfo
 		local Name,Range,Radius,AttackType,targets,targetstr = action.name or "",action.range or "",action.radius or "",action.attacktype or "",cinfo.castingtargets,""
 		if valid(targets) then for _,target in pairs(targets) do
-			targetstr = targetstr..tostring(EntityList:Get(target).name)..","
+			local t = EntityList:Get(target)
+			if valid(t) then
+				targetstr = targetstr..tostring(t.name)..","
+			else
+				targetstr = targetstr.."?????,"
+			end
 		end end
-		table.insert(self.Data.DebugLog,{
-			line = (function() if self.Settings.DebugLog12Hour then return "["..os.date("%I:%M:%S %p").."] " else return "["..os.date("%H:%M:%S").."] " end end)().."Casting: ["..entityID.."] "..name.." - "..Name.."["..actionID.."] on ["..tostring(targetstr).."] (Range: "..Range..", Radius: "..Radius..", Attack Type: "..AttackType..", Heading: "..heading..")",
-			type = 1
-		})
- end end)
+		if self.Settings.DebugTypesEnabled[1] then
+			local reactionTimer = TensorReactions_CurrentTimer or 0
+			local tbl = {
+				line = (function() if self.Settings.DebugLog12Hour then return "["..os.date("%I:%M:%S %p").."] " else return "["..os.date("%H:%M:%S").."] " end end)() .. "TR time: " .. reactionTimer .. ", Casting: ["..entityID.."] "..name.." - "..Name.."["..actionID.."] on ["..tostring(targetstr).."] (Range: "..Range..", Radius: "..Radius..", Attack Type: "..AttackType..", Heading: "..heading..")",
+				type = 1
+			}
+			--table.insert(self.Data.DebugLog,tbl)
+			FileWrite(DebugOutput,"[Casting] "..tbl.line.."\n", true)
+		end
+		
+	end
+	if settings.MarkPlayers and settings.MarkingActions[actionID] and valid(entity) then
+		local ct = entity.castinginfo.castingtargets
+		if valid(ct) then
+			for _,tid in pairs(ct) do
+				local target = EntityList:Get(tid)
+				if valid(target) then
+					local name = target.name
+					--d("["..actionID.."] "..tostring((action or {}).name).." is being casted on ["..tid.."] "..name)
+					if target.marker == 0 and not data.marked[name] then
+						if data.CurrentParty[name] then
+							SendTextCommand([[/marking attack <]]..data.CurrentParty[name]..[[>]])
+							data.marked[name] = Now()
+						end
+					end
+				end
+			end
+		end
+	end
+
+
+end)
 
 Argus.registerOnEntityChannel(function(entityID, channelID, targetID, channelTimeMax)
 	local entity,target = EntityList:Get(entityID),EntityList:Get(targetID)
@@ -1378,20 +1733,42 @@ Argus.registerOnEntityChannel(function(entityID, channelID, targetID, channelTim
 		local action,name,heading = ActionList:Get(1,channelID),entity.name or "", entity.pos.h or 0
 		local Name,Range,Radius,AttackType = action.name or "",action.range or "",action.radius or "",action.attacktype or ""
 		local targetName = (function() if valid(target) then return target.name else return targetID end end)()
-		table.insert(self.Data.DebugLog,{
-			line = (function() if self.Settings.DebugLog12Hour then return "["..os.date("%I:%M:%S %p").."] " else return "["..os.date("%H:%M:%S").."] " end end)().."Channeling: ["..entityID.."] "..name.." - "..Name.."["..channelID.."] on ["..targetName.."] (Range: "..Range..", Radius: "..Radius..", Attack Type: "..AttackType..", Heading: "..heading..")",
-			type = 2
-		})
+		if self.Settings.DebugTypesEnabled[2] then
+			local reactionTimer = TensorReactions_CurrentTimer or 0
+			local tbl = {
+				line = (function() if self.Settings.DebugLog12Hour then return "["..os.date("%I:%M:%S %p").."] " else return "["..os.date("%H:%M:%S").."] " end end)().."TR time: " .. reactionTimer .. ", Channeling: ["..entityID.."] "..name.." - "..Name.."["..channelID.."] on ["..targetName.."] (Range: "..Range..", Radius: "..Radius..", Attack Type: "..AttackType..", Heading: "..heading..")",
+				type = 2
+			}
+			--table.insert(self.Data.DebugLog,tbl)
+			FileWrite(DebugOutput,"[Channeling] "..tbl.line.."\n", true)
+		end
 end end)
 
-Argus.registerOnMarkerAdd(function(entityID, markerType)
-	local entity = EntityList:Get(entityID)
+Argus.registerOnMarkerAdd(function(entityID, markerType) --d("["..tostring(entityID).."] "..tostring(markerType))
+	local entity,Data,Settings = EntityList:Get(entityID),self.Data,self.Settings
 	if valid(entity) then
-		table.insert(self.Data.DebugLog,{
-			line = (function() if self.Settings.DebugLog12Hour then return "["..os.date("%I:%M:%S %p").."] " else return "["..os.date("%H:%M:%S").."] " end end)().."Marker: ["..entityID.."] "..entity.name..", marked with: ["..markerType.."] "..tostring(self.Data.HeadMarker[markerType]),
-			type = 3
-		})
-end end)
+		if Settings.DebugTypesEnabled[3] then
+			local reactionTimer = TensorReactions_CurrentTimer or 0
+			local tbl = {
+				line = (function() if self.Settings.DebugLog12Hour then return "["..os.date("%I:%M:%S %p").."] " else return "["..os.date("%H:%M:%S").."] " end end)().."TR time: " .. reactionTimer .. ", Marker: ["..entityID.."] "..entity.name..", marked with: ["..markerType.."] "..tostring(self.Data.HeadMarker[markerType]),
+				type = 3
+			}
+			--table.insert(self.Data.DebugLog,tbl)
+			FileWrite(DebugOutput,"[Marker] "..tbl.line.."\n", true)
+		end
+
+		--if Settings.MarkPlayers and Settings.MarkingOverhead[markerType] then
+		--	local name = entity.name
+		--	d("Marker: ["..entityID.."] "..name..", marked with: ["..markerType.."] "..tostring(Data.HeadMarker[markerType]))
+		--	if entity.marker == 0 and not Data.marked[name] then
+		--		if Data.CurrentParty[name] then
+		--			SendTextCommand([[/marking attack <]]..Data.CurrentParty[name]..[[>]])
+		--			Data.marked[name] = Now()
+		--		end
+		--	end
+		--end
+	end
+end)
 
 local function unpack(tbl)
 	local str = ""
@@ -1401,11 +1778,120 @@ local function unpack(tbl)
 	end
 	return str
 end
+
+local function avoidanceCallback(aoe)
+	if aoe == nil then return false end
+	local ent = EntityList:Get(aoe.entityID)
+	if ent then
+		return not TensorCore.isFriendly(ent)
+	end
+end
+
 local StringTableCache = {}
 local expandedTreeNodes = {}
+local deleteStart = 0
+
+local ColorPalette = {}
+local HueWheel = false
+local backupColor = {r=0,g=0,b=0,a=0}
+function self.ColorEditor(id,r,g,b,a)
+	if not table.valid(ColorPalette) then
+		local b = 1/36
+		for i=1,36 do
+			table.insert(ColorPalette,{GUI:ColorConvertHSVtoRGB(b*i,1,1)})
+		end
+	end
+	local alpha = a
+	local height = GUI:GetFrameHeight()
+	a = a or 1
+	local pressed = GUI:ColorButton(id,r,g,b,a,0,height,height)
+	local label = id:gsub("%#.*","")
+	if label and #label > 0 then
+		GUI:SameLine(0,5)
+		GUI:Text(label)
+	end
+	if pressed then
+		backupColor = {r=r,b=b,g=g,a=a}
+		GUI:OpenPopup(id)
+	end
+	if GUI:BeginPopup(id, GUI.WindowFlags_NoTitleBar + GUI.WindowFlags_NoResize + GUI.WindowFlags_NoMove + GUI.WindowFlags_NoScrollbar + GUI.WindowFlags_NoScrollWithMouse + GUI.WindowFlags_NoCollapse + GUI.WindowFlags_NoSavedSettings) then
+		local hue = GUI.ColorEditMode_HDR
+		if HueWheel then hue = hue + GUI.ColorEditMode_PickerHueWheel end
+		if alpha then hue = hue + GUI.ColorEditMode_AlphaBar end
+		local r2,g2,b2,a2,changed
+		if alpha then
+			GUI:ColorEditMode(hue)
+			r2,g2,b2,a2,changed = GUI:ColorPicker4("##"..id:gsub(".*%#",""),r,g,b,a, GUI.ColorEditMode_NoSidePreview + GUI.ColorEditMode_NoSmallPreview) -- GUI.ColorEditMode_NoSidePreview
+		else
+			GUI:ColorEditMode(hue)
+			r2,g2,b2,changed = GUI:ColorPicker3("##"..id:gsub(".*%#",""),r,g,b, GUI.ColorEditMode_NoSidePreview + GUI.ColorEditMode_NoSmallPreview) -- GUI.ColorEditMode_NoSidePreview
+		end
+		GUI:SameLine(0,5)
+		--GUI:SetCursorPosX(GUI:GetCursorPosX()-58)
+		--local x,y = GUI:GetCursorPos()
+		GUI:BeginGroup()
+		local str = GetString("Current")
+		local strX,strY = GUI:CalcTextSize(str)
+		local space = 60 - strX + 5
+		GUI:Text(str)
+		GUI:SameLine(0,space)
+		GUI:Text(GetString("Previous"))
+		if alpha then
+			GUI:ColorButton("##current",r2,g2,b2,a2,GUI.ColorEditMode_AlphaPreviewHalf,60,40)
+		else
+			GUI:ColorButton("##current",r2,g2,b2,1,0,60,40)
+		end
+		GUI:SameLine(0,5)
+		local pressed
+		if alpha then
+			pressed = GUI:ColorButton("##previous",backupColor.r,backupColor.g,backupColor.b,backupColor.a,GUI.ColorEditMode_AlphaPreviewHalf,60,40)
+		else
+			pressed = GUI:ColorButton("##previous",backupColor.r or r2,backupColor.g or g2,backupColor.b or b2,1,0,60,40)
+		end
+		if pressed then
+			r,g,b,a,r2,g2,b2,a2 = backupColor.r,backupColor.g,backupColor.b,backupColor.a,backupColor.r,backupColor.g,backupColor.b,backupColor.a
+			changed = true
+		end
+		if GUI:IsItemHovered() then
+			GUI:BeginTooltip()
+			GUI:PushTextWrapPos(300)
+			GUI:TextColored(1,1,0,1,GetString("Left Click to use previous color."))
+			GUI:PopTextWrapPos()
+			GUI:EndTooltip()
+		end
+
+		--GUI:SetCursorPos(x,y+45)
+		HueWheel = GUI:Checkbox(GetString("Use Hue Wheel"),HueWheel)
+		GUI:Separator()
+		GUI:Text(GetString("Palette"))
+		for i=1,36 do
+			local color = ColorPalette[i]
+			local side = GUI:GetContentRegionAvailWidth()
+			if i > 1 and (i-1) % 6 ~= 0 then GUI:SameLine(0,5) end
+			local pressed = GUI:ColorButton("##palette"..i,color[1],color[2],color[3],a,0,height,height)
+			if pressed then
+				r,g,b,a,r2,g2,b2,a2 = color[1],color[2],color[3],a,color[1],color[2],color[3],a
+				changed = true
+			end
+		end
+		GUI:EndGroup()
+		if changed then
+			if alpha then
+				GUI:EndPopup()
+				return r2,g2,b2,a2,changed
+			else
+				GUI:EndPopup()
+				return r2,g2,b2,changed
+			end
+		end
+		GUI:EndPopup()
+		return r2,g2,b2,changed
+	end
+	return r,g,b,false
+end
 
 function self.Draw()
-	local p,Settings,Data,Style = Player,self.Settings,self.Data,GUI:GetStyle()
+	local p,Gui,Settings,Data,Style = Player,self.GUI,self.Settings,self.Data,GUI:GetStyle()
 	local windowPadding = Style.windowpadding
 	local winX,winY,posX,posY
 	if self.GUI.open then
@@ -1413,14 +1899,14 @@ function self.Draw()
 		GUI:SetNextWindowSize(530,175,GUI.SetCond_FirstUseEver)
 		GUI:SetNextWindowPosCenter(GUI.SetCond_FirstUseEver)
 		for k,v in pairs(WindowStyle) do if v[4] ~= 0 then c = c + 1 loadstring([[GUI:PushStyleColor(GUI.Col_]]..k..[[, ]]..(v[1]/255)..[[, ]]..(v[2]/255)..[[, ]]..(v[3]/255)..[[, ]]..v[4]..[[)]])() end end
-		self.GUI.visible, self.GUI.open = GUI:Begin(self.GUI.name, self.GUI.open)
+		self.GUI.visible, self.GUI.open = GUI:Begin(Gui.name.." - v"..self.Info.Version.."##MainWindow###"..Gui.name, self.GUI.open)
 		if self.GUI.visible then
 			local tabindex, tabname = GUI_DrawTabs(self.GUI.main_tabs)
 			if (tabname == GetString("Telegraphs")) then
-				Settings.enable = GUI:Checkbox("Enable / Disable",Settings.enable) GUI:SameLine(0,25)
+				Settings.enable = GUI:Checkbox(GetString("Enable").." / "..GetString("Disable"),Settings.enable) GUI:SameLine(0,25)
 
 				local hovered = false
-				GUI:Text("Draw Range: ") if not hovered then hovered = GUI:IsItemHovered() end
+				GUI:Text(GetString("Draw")..GetString("Range")..": ") if not hovered then hovered = GUI:IsItemHovered() end
 				GUI:SameLine(0,0) GUI:PushItemWidth(60)
 				local val,changed = GUI:SliderInt("##MaxTelegraphDrawRange",Settings.MaxTelegraphDrawRange,0,100)
 				if changed then
@@ -1430,14 +1916,15 @@ function self.Draw()
 				if hovered then
 					GUI:BeginTooltip()
 					GUI:PushTextWrapPos(300)
-					GUI:Text("If you suspect that the draw distance of telegraphs is affecting system performance, you can try changing this value to set the max distance. Keep in mind, if you set this value too low won't be very accurate.\n")
-					GUI:TextColored(1,1,0,1,"Leave this set to 0 for unlimited draw distance.\n[CTRL]+[Left Mouse Button] to manually type in amount instead of dragging.")
+					GUI:Text(GetString("If you suspect that the draw distance of telegraphs is affecting system performance, you can try changing this value to set the max distance. Keep in mind, if you set this value too low won't be very accurate.\n"))
+					GUI:TextColored(1,1,0,1,GetString("Leave this set to 0 for unlimited draw distance.\n[CTRL]+[Left Mouse Button] to manually type in amount instead of dragging."))
 					GUI:PopTextWrapPos()
 					GUI:EndTooltip()
 				end GUI:SameLine(0,25)
 
+
 				local hovered = false
-				GUI:Text("Max Filled Draws: ") if not hovered then hovered = GUI:IsItemHovered() end
+				GUI:Text(GetString("Max").." "..GetString("Filled").." "..GetString("Draws")..": ") if not hovered then hovered = GUI:IsItemHovered() end
 				GUI:SameLine(0,0) GUI:PushItemWidth(60)
 				local val,changed = GUI:SliderInt("##MaxTelegraphsFilled",Settings.MaxTelegraphsFilled,0,25)
 				if changed then
@@ -1447,33 +1934,35 @@ function self.Draw()
 				if hovered then
 					GUI:BeginTooltip()
 					GUI:PushTextWrapPos(300)
-					GUI:Text("Having multiple filled in active telegraphs can impact system performance, depending on your system. You can prevent telegraphs from filling in after a certain amount are already active to free up resources.\n")
-					GUI:TextColored(1,1,0,1,"Leave this set to 0 for unlimited filled telegraphs.\n[CTRL]+[Left Mouse Button] to manually type in amount instead of dragging.")
+					GUI:Text(GetString("Having multiple filled in active telegraphs can impact system performance, depending on your system. You can prevent telegraphs from filling in after a certain amount are already active to free up resources.\n"))
+					GUI:TextColored(1,1,0,1,GetString("Leave this set to 0 for unlimited filled telegraphs.\n[CTRL]+[Left Mouse Button] to manually type in amount instead of dragging."))
 					GUI:PopTextWrapPos()
 					GUI:EndTooltip()
 				end
 
-				Settings.DrawPlayerDot = GUI:Checkbox("Draw Player Dot",Settings.DrawPlayerDot)
+				Settings.DrawPlayerDot = GUI:Checkbox(GetString("Draw").." "..GetString("Player").." "..GetString("Dot"),Settings.DrawPlayerDot)
 				GUI:SameLine(0,11)
 				local dot = Settings.DotRGB
-				GUI:ColorEditMode(GUI.ColorEditMode_NoInputs + GUI.ColorEditMode_AlphaBar)
-				local r,g,b,a,changed = GUI:ColorEdit4("##PlayerDotColorTelegraphs",dot.r, dot.g, dot.b, dot.a)
+				--GUI:ColorEditMode(ColorEditModeFlags)
+				--GUI:ColorEditMode(ColorEditModeFlags)
+				--local r,g,b,a,changed = GUI:ColorEdit4("##PlayerDotColorTelegraphs",dot.r, dot.g, dot.b, dot.a)
+				local r,g,b,a,changed = self.ColorEditor("##PlayerDotColorTelegraphs",dot.r, dot.g, dot.b, dot.a)
 				if (changed) then
 					Settings.DotRGB = {r=r,g=g,b=b,a=a}
 					Settings.DotDotU32 = GUI:ColorConvertFloat4ToU32(r,g,b,a) save(true)
 				end
 				GUI:SameLine(0,10)
 				GUI:PushItemWidth(50)
-				Settings.DotSize = GUI:SliderInt("Dot Size",Settings.DotSize,1,10)
+				Settings.DotSize = GUI:SliderInt(GetString("Dot").." "..GetString("Size"),Settings.DotSize,1,10)
 				GUI:PopItemWidth()
 				--GUI:Indent()
 				GUI:SameLine(0,15)
-				Settings.DrawDotCombatOnly = GUI:Checkbox("Combat Only",Settings.DrawDotCombatOnly)
+				Settings.DrawDotCombatOnly = GUI:Checkbox(GetString("Combat").." "..GetString("Only"),Settings.DrawDotCombatOnly)
 				GUI:SameLine(0,5)
-				Settings.DrawDotInstanceOnly = GUI:Checkbox("Instance Only",Settings.DrawDotInstanceOnly)
+				Settings.DrawDotInstanceOnly = GUI:Checkbox(GetString("Instance").." "..GetString("Only"),Settings.DrawDotInstanceOnly)
 				--GUI:Unindent()
 
-				local str = "Color Settings:"
+				local str = GetString("Color").." "..GetString("Settings")..":"
 				local strX,strY = GUI:CalcTextSize(str)
 				GUI:BeginChild(str.."#Telegraphs", strX + (windowPadding.x * 2) , GUI:GetFrameHeight() + (windowPadding.y * 2),true, GUI.WindowFlags_NoTitleBar + GUI.WindowFlags_NoResize + GUI.WindowFlags_NoMove + GUI.WindowFlags_NoScrollbar + GUI.WindowFlags_NoScrollWithMouse + GUI.WindowFlags_NoCollapse + GUI.WindowFlags_NoSavedSettings)
 				GUI:AlignFirstTextHeightToWidgets()
@@ -1482,44 +1971,67 @@ function self.Draw()
 				GUI:BeginChild("##ColorSettingsTelegraphs",-1, GUI:GetFrameHeight() + (windowPadding.y * 2), true, GUI.WindowFlags_NoTitleBar + GUI.WindowFlags_NoResize + GUI.WindowFlags_NoMove + GUI.WindowFlags_NoScrollbar + GUI.WindowFlags_NoScrollWithMouse + GUI.WindowFlags_NoCollapse + GUI.WindowFlags_NoSavedSettings) GUI:SameLine(0,10)
 				local alphafill,fillRGB,outlineRGB,outlineThickness = Settings.alphafill,Settings.fillRGB,Settings.outlineRGB,Settings.outlineThickness
 				local smallEnemy,largeEnemy,smallHealing,largeHealing,smallFriend,largeFriend,enemyFill,healingFill,friendFill,outlineEnemy,outlineHealing,outlineFriend,outlineRangeInside,outlineRangeOutside,outlineThicknessEnemy,outlineThicknessHealing,outlineThicknessFriend,outlineThicknessRange = alphafill.enemy.small,alphafill.enemy.large,alphafill.healing.small,alphafill.healing.large,alphafill.friend.small,alphafill.friend.large,fillRGB.enemy,fillRGB.healing,fillRGB.friend,outlineRGB.enemy,outlineRGB.healing,outlineRGB.friend,outlineRGB.rangeInside,outlineRGB.rangeOutside,outlineThickness.enemy,outlineThickness.healing,outlineThickness.friend,outlineThickness.range
-				GUI:ColorButton("Enemy Color", enemyFill.r, enemyFill.g, enemyFill.b, 1, 0, GUI:GetFrameHeight(), GUI:GetFrameHeight())
+				GUI:ColorButton(GetString("Enemy").." "..GetString("Color"), enemyFill.finish.r/255, enemyFill.finish.g/255, enemyFill.finish.b/255, 1, 0, GUI:GetFrameHeight(), GUI:GetFrameHeight())
 				if GUI:IsItemClicked(0) then
-					GUI:OpenPopup("Enemy Color Editor")
+					GUI:OpenPopup(GetString("Enemy").." "..GetString("Color").." "..GetString("Editor"))
 				end
-				if GUI:BeginPopup("Enemy Color Editor", GUI.WindowFlags_NoTitleBar + GUI.WindowFlags_NoResize + GUI.WindowFlags_NoMove + GUI.WindowFlags_NoScrollbar + GUI.WindowFlags_NoScrollWithMouse + GUI.WindowFlags_NoCollapse + GUI.WindowFlags_NoSavedSettings) then
-					GUI:ColorEditMode(GUI.ColorEditMode_NoInputs + GUI.ColorEditMode_NoAlpha)
-					local r,g,b,changed = GUI:ColorEdit3("Enemy Color##EnemyColorTelegraphs",enemyFill.r, enemyFill.g, enemyFill.b)
+				if GUI:BeginPopup(GetString("Enemy").." "..GetString("Color").." "..GetString("Editor"), GUI.WindowFlags_NoTitleBar + GUI.WindowFlags_NoResize + GUI.WindowFlags_NoMove + GUI.WindowFlags_NoScrollbar + GUI.WindowFlags_NoScrollWithMouse + GUI.WindowFlags_NoCollapse + GUI.WindowFlags_NoSavedSettings) then
+					GUI:AlignFirstTextHeightToWidgets()
+					GUI:Text(GetString("Enemy").." "..GetString("Color")..": ") GUI:SameLine(0,0)
+
+					GUI:ColorEditMode(ColorEditModeFlags)
+					--local r,g,b,changed = GUI:ColorEdit3("Start##EnemyColorTelegraphs",enemyFill.start.r/255, enemyFill.start.g/255, enemyFill.start.b/255)
+					local r,g,b,changed = self.ColorEditor(GetString("Start").."##EnemyColorTelegraphs",enemyFill.start.r/255, enemyFill.start.g/255, enemyFill.start.b/255)
 					if (changed) then
 						self.Data.lastColorChange = Now()
 						self.Data.lastColorRGB = {r=r,g=g,b=b}
-						self.Data.lastLineRGB = Settings.outlineRGB.enemy
-						Settings.fillRGB.enemy = {r=r,g=g,b=b}
+						self.Data.lastLineRGB = {r=r,g=g,b=b}
+						Settings.fillRGB.enemy.start = {r=r*255,g=g*255,b=b*255}
 						self.Data.lastColorAlpha = Settings.alphafill.enemy.small.max save(true)
 					end
 					if GUI:IsItemClicked() then
 						self.Data.lastColorChange = Now()
 						self.Data.lastColorRGB = {r=r,g=g,b=b}
-						self.Data.lastLineRGB = Settings.outlineRGB.enemy
+						self.Data.lastLineRGB = {r=r,g=g,b=b}
 						self.Data.lastColorAlpha = Settings.alphafill.enemy.small.max
 					end GUI:SameLine(0,15)
-					GUI:ColorEditMode(GUI.ColorEditMode_NoInputs + GUI.ColorEditMode_AlphaBar)
-					local r2,g2,b2,a2,changed2 = GUI:ColorEdit4("Outline Color##EnemyColorTelegraphs",outlineEnemy.r, outlineEnemy.g, outlineEnemy.b, outlineEnemy.a)
-					if (changed2) then
+
+					GUI:ColorEditMode(ColorEditModeFlags)
+					--local r,g,b,changed = GUI:ColorEdit3("Mid##EnemyColorTelegraphs",enemyFill.mid.r/255, enemyFill.mid.g/255, enemyFill.mid.b/255)
+					local r,g,b,changed = self.ColorEditor(GetString("Mid").."##EnemyColorTelegraphs",enemyFill.mid.r/255, enemyFill.mid.g/255, enemyFill.mid.b/255)
+					if (changed) then
 						self.Data.lastColorChange = Now()
 						self.Data.lastColorRGB = {r=r,g=g,b=b}
-						self.Data.lastLineRGB = {r=r2,g=g2,b=b2,a=a2}
-						Settings.outlineRGB.enemy = {r=r2,g=g2,b=b2,a=a2}
+						self.Data.lastLineRGB = {r=r,g=g,b=b}
+						Settings.fillRGB.enemy.mid = {r=r*255,g=g*255,b=b*255}
 						self.Data.lastColorAlpha = Settings.alphafill.enemy.small.max save(true)
 					end
 					if GUI:IsItemClicked() then
 						self.Data.lastColorChange = Now()
 						self.Data.lastColorRGB = {r=r,g=g,b=b}
-						self.Data.lastLineRGB = {r=r2,g=g2,b=b2,a=a2}
+						self.Data.lastLineRGB = {r=r,g=g,b=b}
 						self.Data.lastColorAlpha = Settings.alphafill.enemy.small.max
 					end GUI:SameLine(0,15)
-					GUI:Text("Line Size: ") GUI:SameLine(0,0) GUI:PushItemWidth(-1)
-					local val,changed = GUI:SliderInt("##OutlineThicknessEnemy",outlineThicknessEnemy,1,10)
-					if changed then
+
+					GUI:ColorEditMode(ColorEditModeFlags)
+					--local r,g,b,changed = GUI:ColorEdit3("Finish##EnemyColorTelegraphs",enemyFill.finish.r/255, enemyFill.finish.g/255, enemyFill.finish.b/255)
+					local r,g,b,changed = self.ColorEditor(GetString("Finish").."##EnemyColorTelegraphs",enemyFill.finish.r/255, enemyFill.finish.g/255, enemyFill.finish.b/255)
+					if (changed) then
+						self.Data.lastColorChange = Now()
+						self.Data.lastColorRGB = {r=r,g=g,b=b}
+						self.Data.lastLineRGB = {r=r,g=g,b=b}
+						Settings.fillRGB.enemy.finish = {r=r*255,g=g*255,b=b*255}
+						self.Data.lastColorAlpha = Settings.alphafill.enemy.small.max save(true)
+					end
+					if GUI:IsItemClicked() then
+						self.Data.lastColorChange = Now()
+						self.Data.lastColorRGB = {r=r,g=g,b=b}
+						self.Data.lastLineRGB = {r=r,g=g,b=b}
+						self.Data.lastColorAlpha = Settings.alphafill.enemy.small.max
+					end GUI:SameLine(0,15)
+					GUI:Text(GetString("Line")..": ") GUI:SameLine(0,0) GUI:PushItemWidth(-1)
+					local val,changed = GUI:SliderFloat("##OutlineThicknessEnemy",outlineThicknessEnemy,1,10)
+					if val ~= outlineThicknessEnemy then d(val)
 						self.Data.lastColorChange = Now()
 						self.Data.lastColorRGB = {r=r,g=g,b=b}
 						self.Data.lastLineRGB = {r=r2,g=g2,b=b2,a=a2}
@@ -1528,8 +2040,8 @@ function self.Draw()
 						self.Data.lastLineThickness = val save(true)
 					end GUI:PopItemWidth()
 
-					GUI:Text("Telegraph Fill Alpha Settings:")
-					local str = "Small AoE:"
+					GUI:Text(GetString("Telegraph Fill Alpha Settings:"))
+					local str = GetString("Small").." "..GetString("AoE:")
 					local strX,strY = GUI:CalcTextSize(str)
 					GUI:BeginChild(str.."#SmallTelegraphs", strX + (windowPadding.x * 2) , GUI:GetFrameHeight() + (windowPadding.y * 2),true, GUI.WindowFlags_NoTitleBar + GUI.WindowFlags_NoResize + GUI.WindowFlags_NoMove + GUI.WindowFlags_NoScrollbar + GUI.WindowFlags_NoScrollWithMouse + GUI.WindowFlags_NoCollapse + GUI.WindowFlags_NoSavedSettings)
 					GUI:AlignFirstTextHeightToWidgets()
@@ -1538,7 +2050,7 @@ function self.Draw()
 					GUI:BeginChild("##SmallAlphaSettingsTelegraphs",GUI:CalcTextSize("Min Alpha: Max: ") + 200, GUI:GetFrameHeight() + (windowPadding.y * 2), true, GUI.WindowFlags_NoTitleBar + GUI.WindowFlags_NoResize + GUI.WindowFlags_NoMove + GUI.WindowFlags_NoScrollbar + GUI.WindowFlags_NoScrollWithMouse + GUI.WindowFlags_NoCollapse + GUI.WindowFlags_NoSavedSettings)
 					GUI:PushItemWidth(100)
 					GUI:AlignFirstTextHeightToWidgets()
-					GUI:Text("Min: ") GUI:SameLine(0,0)
+					GUI:Text(GetString("Min")..": ") GUI:SameLine(0,0)
 					local val,changed = GUI:SliderInt("##smallTelegraphsMin",smallEnemy.min*100,1,100,"%i%%")
 					if changed then
 						smallEnemy.min = val / 100
@@ -1547,7 +2059,7 @@ function self.Draw()
 						self.Data.lastLineRGB = Settings.outlineRGB.enemy
 						self.Data.lastColorAlpha = val / 100
 					end GUI:SameLine(0,15)
-					GUI:Text("Max: ") GUI:SameLine(0,0)
+					GUI:Text(GetString("Max")..": ") GUI:SameLine(0,0)
 					local val2,changed2 = GUI:SliderInt("##smallTelegraphsMax",smallEnemy.max*100,1,100,"%i%%")
 					if changed2 then
 						smallEnemy.max = val2 / 100
@@ -1559,7 +2071,7 @@ function self.Draw()
 					GUI:PopItemWidth()
 					GUI:EndChild()
 
-					local str = "Large AoE:"
+					local str = GetString("Large").." "..GetString("AoE:")
 					local strX,strY = GUI:CalcTextSize(str)
 					GUI:BeginChild(str.."#LargeTelegraphs", strX + (windowPadding.x * 2) , GUI:GetFrameHeight() + (windowPadding.y * 2),true, GUI.WindowFlags_NoTitleBar + GUI.WindowFlags_NoResize + GUI.WindowFlags_NoMove + GUI.WindowFlags_NoScrollbar + GUI.WindowFlags_NoScrollWithMouse + GUI.WindowFlags_NoCollapse + GUI.WindowFlags_NoSavedSettings)
 					GUI:AlignFirstTextHeightToWidgets()
@@ -1568,7 +2080,7 @@ function self.Draw()
 					GUI:BeginChild("##LargeAlphaSettingsTelegraphs",GUI:CalcTextSize("Min Alpha: Max: ") + 200, GUI:GetFrameHeight() + (windowPadding.y * 2), true, GUI.WindowFlags_NoTitleBar + GUI.WindowFlags_NoResize + GUI.WindowFlags_NoMove + GUI.WindowFlags_NoScrollbar + GUI.WindowFlags_NoScrollWithMouse + GUI.WindowFlags_NoCollapse + GUI.WindowFlags_NoSavedSettings)
 					GUI:PushItemWidth(100)
 					GUI:AlignFirstTextHeightToWidgets()
-					GUI:Text("Min: ") GUI:SameLine(0,0)
+					GUI:Text(GetString("Min")..": ") GUI:SameLine(0,0)
 					local val,changed = GUI:SliderInt("##LargeTelegraphsMin",largeEnemy.min*100,1,100,"%i%%")
 					if changed then
 						largeEnemy.min = val / 100
@@ -1577,7 +2089,7 @@ function self.Draw()
 						self.Data.lastLineRGB = Settings.outlineRGB.enemy
 						self.Data.lastColorAlpha = val / 100
 					end GUI:SameLine(0,15)
-					GUI:Text("Max: ") GUI:SameLine(0,0)
+					GUI:Text(GetString("Max")..": ") GUI:SameLine(0,0)
 					local val2,changed2 = GUI:SliderInt("##LargeTelegraphsMax",largeEnemy.max*100,1,100,"%i%%")
 					if changed2 then
 						largeEnemy.max = val2 / 100
@@ -1591,19 +2103,23 @@ function self.Draw()
 
 					GUI:EndPopup()
 				end
-				GUI:SameLine(0,5) GUI:Text("Enemy")
+				GUI:SameLine(0,5) GUI:Text(GetString("Enemy"))
+				if GUI:IsItemClicked(0) then
+					GUI:OpenPopup(GetString("Enemy").." "..GetString("Color").." "..GetString("Editor"))
+				end
 				GUI:SameLine(0,15)
 
 				local hovered = false
-				GUI:ColorButton("Healing Color", healingFill.r, healingFill.g, healingFill.b, 1, 0, GUI:GetFrameHeight(), GUI:GetFrameHeight()) if not hovered then hovered = GUI:IsItemHovered() end
+				GUI:ColorButton(GetString("Healing").." "..GetString("Color"), healingFill.r, healingFill.g, healingFill.b, 1, 0, GUI:GetFrameHeight(), GUI:GetFrameHeight()) if not hovered then hovered = GUI:IsItemHovered() end
 				if GUI:IsItemClicked(0) then
-					GUI:OpenPopup("Healing Color Editor")
+					GUI:OpenPopup(GetString("Healing").." "..GetString("Color").." "..GetString("Editor"))
 				elseif GUI:IsItemClicked(1) then
 					Settings.DrawHealingAoE = not Settings.DrawHealingAoE save(true)
 				end
-				if GUI:BeginPopup("Healing Color Editor", GUI.WindowFlags_NoTitleBar + GUI.WindowFlags_NoResize + GUI.WindowFlags_NoMove + GUI.WindowFlags_NoScrollbar + GUI.WindowFlags_NoScrollWithMouse + GUI.WindowFlags_NoCollapse + GUI.WindowFlags_NoSavedSettings) then
-					GUI:ColorEditMode(GUI.ColorEditMode_NoInputs + GUI.ColorEditMode_NoAlpha)
-					local r,g,b,changed = GUI:ColorEdit3("Healing Color##HealingColorTelegraphs",healingFill.r, healingFill.g, healingFill.b)
+				if GUI:BeginPopup(GetString("Healing").." "..GetString("Color").." "..GetString("Editor"), GUI.WindowFlags_NoTitleBar + GUI.WindowFlags_NoResize + GUI.WindowFlags_NoMove + GUI.WindowFlags_NoScrollbar + GUI.WindowFlags_NoScrollWithMouse + GUI.WindowFlags_NoCollapse + GUI.WindowFlags_NoSavedSettings) then
+					GUI:ColorEditMode(ColorEditModeFlags)
+					--local r,g,b,changed = GUI:ColorEdit3("Healing Color##HealingColorTelegraphs",healingFill.r, healingFill.g, healingFill.b)
+					local r,g,b,changed = self.ColorEditor(GetString("Healing").." "..GetString("Color").."##HealingColorTelegraphs",healingFill.r, healingFill.g, healingFill.b)
 					if (changed) then
 						self.Data.lastColorChange = Now()
 						self.Data.lastColorRGB = {r=r,g=g,b=b}
@@ -1617,8 +2133,9 @@ function self.Draw()
 						self.Data.lastLineRGB = Settings.outlineRGB.healing
 						self.Data.lastColorAlpha = Settings.alphafill.healing.small.max
 					end GUI:SameLine(0,15)
-					GUI:ColorEditMode(GUI.ColorEditMode_NoInputs + GUI.ColorEditMode_AlphaBar)
-					local r2,g2,b2,a2,changed2 = GUI:ColorEdit4("Outline Color##HealingColorTelegraphs",outlineHealing.r, outlineHealing.g, outlineHealing.b, outlineHealing.a)
+					GUI:ColorEditMode(ColorEditModeFlags)
+					--local r2,g2,b2,a2,changed2 = GUI:ColorEdit4("Outline Color##HealingColorTelegraphs",outlineHealing.r, outlineHealing.g, outlineHealing.b, outlineHealing.a)
+					local r2,g2,b2,a2,changed2 = self.ColorEditor(GetString("Outline").." "..GetString("Color").."##HealingColorTelegraphs",outlineHealing.r, outlineHealing.g, outlineHealing.b, outlineHealing.a)
 					if (changed2) then
 						self.Data.lastColorChange = Now()
 						self.Data.lastColorRGB = {r=r,g=g,b=b}
@@ -1632,8 +2149,8 @@ function self.Draw()
 						self.Data.lastLineRGB = {r=r2,g=g2,b=b2,a=a2}
 						self.Data.lastColorAlpha = Settings.alphafill.healing.small.max
 					end GUI:SameLine(0,15)
-					GUI:Text("Line Size: ") GUI:SameLine(0,0) GUI:PushItemWidth(-1)
-					local val,changed = GUI:SliderInt("##OutlineThicknessHealing",outlineThicknessHealing,1,10)
+					GUI:Text(GetString("Line").." "..GetString("Size")..": ") GUI:SameLine(0,0) GUI:PushItemWidth(-1)
+					local val,changed = GUI:SliderFloat("##OutlineThicknessHealing",outlineThicknessHealing,1,10)
 					if changed then
 						self.Data.lastColorChange = Now()
 						self.Data.lastColorRGB = {r=r,g=g,b=b}
@@ -1643,8 +2160,8 @@ function self.Draw()
 						self.Data.lastLineThickness = val save(true)
 					end GUI:PopItemWidth()
 
-					GUI:Text("Telegraph Fill Alpha Settings:")
-					local str = "Small AoE:"
+					GUI:Text(GetString("Telegraph Fill Alpha Settings:"))
+					local str = GetString("Small").." "..GetString("AoE")..":"
 					local strX,strY = GUI:CalcTextSize(str)
 					GUI:BeginChild(str.."#SmallTelegraphs", strX + (windowPadding.x * 2) , GUI:GetFrameHeight() + (windowPadding.y * 2),true, GUI.WindowFlags_NoTitleBar + GUI.WindowFlags_NoResize + GUI.WindowFlags_NoMove + GUI.WindowFlags_NoScrollbar + GUI.WindowFlags_NoScrollWithMouse + GUI.WindowFlags_NoCollapse + GUI.WindowFlags_NoSavedSettings)
 					GUI:AlignFirstTextHeightToWidgets()
@@ -1653,7 +2170,7 @@ function self.Draw()
 					GUI:BeginChild("##SmallAlphaSettingsTelegraphs",GUI:CalcTextSize("Min Alpha: Max: ") + 200, GUI:GetFrameHeight() + (windowPadding.y * 2), true, GUI.WindowFlags_NoTitleBar + GUI.WindowFlags_NoResize + GUI.WindowFlags_NoMove + GUI.WindowFlags_NoScrollbar + GUI.WindowFlags_NoScrollWithMouse + GUI.WindowFlags_NoCollapse + GUI.WindowFlags_NoSavedSettings)
 					GUI:PushItemWidth(100)
 					GUI:AlignFirstTextHeightToWidgets()
-					GUI:Text("Min: ") GUI:SameLine(0,0)
+					GUI:Text(GetString("Min")..": ") GUI:SameLine(0,0)
 					local val,changed = GUI:SliderInt("##smallTelegraphsMin",smallHealing.min*100,1,100,"%i%%")
 					if changed then
 						smallHealing.min = val / 100
@@ -1662,7 +2179,7 @@ function self.Draw()
 						self.Data.lastLineRGB = Settings.outlineRGB.healing
 						self.Data.lastColorAlpha = val / 100
 					end GUI:SameLine(0,15)
-					GUI:Text("Max: ") GUI:SameLine(0,0)
+					GUI:Text(GetString("Max")..": ") GUI:SameLine(0,0)
 					local val2,changed2 = GUI:SliderInt("##smallTelegraphsMax",smallHealing.max*100,1,100,"%i%%")
 					if changed2 then
 						smallHealing.max = val2 / 100
@@ -1674,7 +2191,7 @@ function self.Draw()
 					GUI:PopItemWidth()
 					GUI:EndChild()
 
-					local str = "Large AoE:"
+					local str = GetString("Large").." "..GetString("AoE")..":"
 					local strX,strY = GUI:CalcTextSize(str)
 					GUI:BeginChild(str.."#LargeTelegraphs", strX + (windowPadding.x * 2) , GUI:GetFrameHeight() + (windowPadding.y * 2),true, GUI.WindowFlags_NoTitleBar + GUI.WindowFlags_NoResize + GUI.WindowFlags_NoMove + GUI.WindowFlags_NoScrollbar + GUI.WindowFlags_NoScrollWithMouse + GUI.WindowFlags_NoCollapse + GUI.WindowFlags_NoSavedSettings)
 					GUI:AlignFirstTextHeightToWidgets()
@@ -1683,7 +2200,7 @@ function self.Draw()
 					GUI:BeginChild("##LargeAlphaSettingsTelegraphs",GUI:CalcTextSize("Min Alpha: Max: ") + 200, GUI:GetFrameHeight() + (windowPadding.y * 2), true, GUI.WindowFlags_NoTitleBar + GUI.WindowFlags_NoResize + GUI.WindowFlags_NoMove + GUI.WindowFlags_NoScrollbar + GUI.WindowFlags_NoScrollWithMouse + GUI.WindowFlags_NoCollapse + GUI.WindowFlags_NoSavedSettings)
 					GUI:PushItemWidth(100)
 					GUI:AlignFirstTextHeightToWidgets()
-					GUI:Text("Min: ") GUI:SameLine(0,0)
+					GUI:Text(GetString("Min")..": ") GUI:SameLine(0,0)
 					local val,changed = GUI:SliderInt("##LargeTelegraphsMin",largeHealing.min*100,1,100,"%i%%")
 					if changed then
 						largeHealing.min = val / 100
@@ -1692,7 +2209,7 @@ function self.Draw()
 						self.Data.lastLineRGB = Settings.outlineRGB.healing
 						self.Data.lastColorAlpha = val / 100
 					end GUI:SameLine(0,15)
-					GUI:Text("Max: ") GUI:SameLine(0,0)
+					GUI:Text(GetString("Max")..": ") GUI:SameLine(0,0)
 					local val2,changed2 = GUI:SliderInt("##LargeTelegraphsMax",largeHealing.max*100,1,100,"%i%%")
 					if changed2 then
 						largeHealing.max = val2 / 100
@@ -1707,7 +2224,7 @@ function self.Draw()
 					GUI:PushItemWidth(-1)
 					GUI:AlignFirstTextHeightToWidgets()
 					if not StringTableCache["Healing Actions"] then StringTableCache["Healing Actions"] = unpack(Settings.HealingAoeActions) end
-					GUI:Text("Healing Actions: ")
+					GUI:Text(GetString("Healing").." "..GetString("Actions")..": ")
 					GUI:SameLine(0,0)
 					local val,changed = GUI:InputText("##HealingActions",StringTableCache["Healing Actions"])
 					if changed then
@@ -1719,19 +2236,19 @@ function self.Draw()
 						end
 					end
 					GUI:PopItemWidth()
-					Settings.DrawHealingOutOfRange = GUI:Checkbox("Draw healing only if out of range",Settings.DrawHealingOutOfRange)
-					Settings.DrawHealingCirclesOutline = GUI:Checkbox("Draw outline while in range",Settings.DrawHealingCirclesOutline)
-					Settings.DrawHealingOutlineIfHealer = GUI:Checkbox("Draw outline if you're the caster",Settings.DrawHealingOutlineIfHealer)
+					Settings.DrawHealingOutOfRange = GUI:Checkbox(GetString("Draw healing only if out of range"),Settings.DrawHealingOutOfRange)
+					Settings.DrawHealingCirclesOutline = GUI:Checkbox(GetString("Draw outline while in range"),Settings.DrawHealingCirclesOutline)
+					Settings.DrawHealingOutlineIfHealer = GUI:Checkbox(GetString("Draw outline if you're the caster"),Settings.DrawHealingOutlineIfHealer)
 					GUI:EndPopup()
 				end
 				GUI:SameLine(0,5)
 				if Settings.DrawHealingAoE then
-					GUI:Text("Healing")
+					GUI:Text(GetString("Healing"))
 				else
 					GUI:TextDisabled("Healing")
 				end if not hovered then hovered = GUI:IsItemHovered() end
 				if GUI:IsItemClicked(0) then
-					GUI:OpenPopup("Healing Color Editor")
+					GUI:OpenPopup(GetString("Healing").." "..GetString("Color").." "..GetString("Editor"))
 				elseif GUI:IsItemClicked(1) then
 					Settings.DrawHealingAoE = not Settings.DrawHealingAoE save(true)
 				end
@@ -1739,14 +2256,14 @@ function self.Draw()
 					GUI:BeginTooltip()
 					GUI:PushTextWrapPos(300)
 					local str = (function() if Settings.DrawHealingAoE then return "Disable" else return "Enable" end end)()
-					GUI:Text("Right Click to [") GUI:SameLine(0,0)
-					GUI:TextColored(1,1,0,1,str) GUI:SameLine(0,0)
-					GUI:Text("]")
+					GUI:Text(GetString("Right Click to [")) GUI:SameLine(0,0)
+					GUI:TextColored(1,1,0,1,GetString(str)) GUI:SameLine(0,0)
+					GUI:Text(GetString("]"))
 					GUI:PopTextWrapPos()
 					GUI:EndTooltip()
 				end GUI:SameLine(0,15)
 
-
+				-- TODO: GetString progress
 				local hovered = false
 				GUI:ColorButton("Friendly Color", friendFill.r, friendFill.g, friendFill.b, 1, 0, GUI:GetFrameHeight(), GUI:GetFrameHeight()) if not hovered then hovered = GUI:IsItemHovered() end
 				if GUI:IsItemClicked(0) then
@@ -1755,8 +2272,9 @@ function self.Draw()
 					Settings.DrawFriendlyAoE = not Settings.DrawFriendlyAoE save(true)
 				end
 				if GUI:BeginPopup("Friendly Color Editor", GUI.WindowFlags_NoTitleBar + GUI.WindowFlags_NoResize + GUI.WindowFlags_NoMove + GUI.WindowFlags_NoScrollbar + GUI.WindowFlags_NoScrollWithMouse + GUI.WindowFlags_NoCollapse + GUI.WindowFlags_NoSavedSettings) then
-					GUI:ColorEditMode(GUI.ColorEditMode_NoInputs + GUI.ColorEditMode_NoAlpha)
-					local r,g,b,changed = GUI:ColorEdit3("Friendly Color##FriendlyColorTelegraphs",friendFill.r, friendFill.g, friendFill.b)
+						GUI:ColorEditMode(ColorEditModeFlags)
+					--local r,g,b,changed = GUI:ColorEdit3("Friendly Color##FriendlyColorTelegraphs",friendFill.r, friendFill.g, friendFill.b)
+					local r,g,b,changed = self.ColorEditor("Friendly Color##FriendlyColorTelegraphs",friendFill.r, friendFill.g, friendFill.b)
 					if (changed) then
 						self.Data.lastColorChange = Now()
 						self.Data.lastColorRGB = {r=r,g=g,b=b}
@@ -1770,8 +2288,9 @@ function self.Draw()
 						self.Data.lastLineRGB = Settings.outlineRGB.friend
 						self.Data.lastColorAlpha = Settings.alphafill.friend.small.max
 					end GUI:SameLine(0,15)
-					GUI:ColorEditMode(GUI.ColorEditMode_NoInputs + GUI.ColorEditMode_AlphaBar)
-					local r2,g2,b2,a2,changed2 = GUI:ColorEdit4("Outline Color##FriendColorTelegraphs",outlineFriend.r, outlineFriend.g, outlineFriend.b, outlineFriend.a)
+					GUI:ColorEditMode(ColorEditModeFlags)
+					--local r2,g2,b2,a2,changed2 = GUI:ColorEdit4("Outline Color##FriendColorTelegraphs",outlineFriend.r, outlineFriend.g, outlineFriend.b, outlineFriend.a)
+					local r2,g2,b2,a2,changed2 = self.ColorEditor("Outline Color##FriendColorTelegraphs",outlineFriend.r, outlineFriend.g, outlineFriend.b, outlineFriend.a)
 					if (changed2) then
 						self.Data.lastColorChange = Now()
 						self.Data.lastColorRGB = {r=r,g=g,b=b}
@@ -1785,8 +2304,8 @@ function self.Draw()
 						self.Data.lastLineRGB = {r=r2,g=g2,b=b2,a=a2}
 						self.Data.lastColorAlpha = Settings.alphafill.friend.small.max
 					end GUI:SameLine(0,15)
-					GUI:Text("Line Size: ") GUI:SameLine(0,0) GUI:PushItemWidth(-1)
-					local val,changed = GUI:SliderInt("##OutlineThicknessFriend",outlineThicknessFriend,1,10)
+					GUI:Text(GetString("Line Size: ")) GUI:SameLine(0,0) GUI:PushItemWidth(-1)
+					local val,changed = GUI:SliderFloat("##OutlineThicknessFriend",outlineThicknessFriend,1,10)
 					if changed then
 						self.Data.lastColorChange = Now()
 						self.Data.lastColorRGB = {r=r,g=g,b=b}
@@ -1796,7 +2315,7 @@ function self.Draw()
 						self.Data.lastLineThickness = val save(true)
 					end GUI:PopItemWidth()
 
-					GUI:Text("Telegraph Fill Alpha Settings:")
+					GUI:Text(GetString("Telegraph Fill Alpha Settings:"))
 					local str = "Small AoE:"
 					local strX,strY = GUI:CalcTextSize(str)
 					GUI:BeginChild(str.."#SmallTelegraphs", strX + (windowPadding.x * 2) , GUI:GetFrameHeight() + (windowPadding.y * 2),true, GUI.WindowFlags_NoTitleBar + GUI.WindowFlags_NoResize + GUI.WindowFlags_NoMove + GUI.WindowFlags_NoScrollbar + GUI.WindowFlags_NoScrollWithMouse + GUI.WindowFlags_NoCollapse + GUI.WindowFlags_NoSavedSettings)
@@ -1806,7 +2325,7 @@ function self.Draw()
 					GUI:BeginChild("##SmallAlphaSettingsTelegraphs",GUI:CalcTextSize("Min Alpha: Max: ") + 200, GUI:GetFrameHeight() + (windowPadding.y * 2), true, GUI.WindowFlags_NoTitleBar + GUI.WindowFlags_NoResize + GUI.WindowFlags_NoMove + GUI.WindowFlags_NoScrollbar + GUI.WindowFlags_NoScrollWithMouse + GUI.WindowFlags_NoCollapse + GUI.WindowFlags_NoSavedSettings)
 					GUI:PushItemWidth(100)
 					GUI:AlignFirstTextHeightToWidgets()
-					GUI:Text("Min: ") GUI:SameLine(0,0)
+					GUI:Text(GetString("Min: ")) GUI:SameLine(0,0)
 					local val,changed = GUI:SliderInt("##smallTelegraphsMin",smallFriend.min*100,1,100,"%i%%")
 					if changed then
 						smallFriend.min = val / 100
@@ -1815,7 +2334,7 @@ function self.Draw()
 						self.Data.lastLineRGB = Settings.outlineRGB.friend
 						self.Data.lastColorAlpha = val / 100
 					end GUI:SameLine(0,15)
-					GUI:Text("Max: ") GUI:SameLine(0,0)
+					GUI:Text(GetString("Max: ")) GUI:SameLine(0,0)
 					local val2,changed2 = GUI:SliderInt("##smallTelegraphsMax",smallFriend.max*100,1,100,"%i%%")
 					if changed2 then
 						smallFriend.max = val2 / 100
@@ -1835,7 +2354,7 @@ function self.Draw()
 					GUI:EndChild() GUI:SameLine(0,0)
 					GUI:BeginChild("##LargeAlphaSettingsTelegraphs",GUI:CalcTextSize("Min Alpha: Max: ") + 200, GUI:GetFrameHeight() + (windowPadding.y * 2), true, GUI.WindowFlags_NoTitleBar + GUI.WindowFlags_NoResize + GUI.WindowFlags_NoMove + GUI.WindowFlags_NoScrollbar + GUI.WindowFlags_NoScrollWithMouse + GUI.WindowFlags_NoCollapse + GUI.WindowFlags_NoSavedSettings)
 					GUI:PushItemWidth(100)
-					GUI:Text("Min: ") GUI:SameLine(0,0)
+					GUI:Text(GetString("Min: ")) GUI:SameLine(0,0)
 					local val,changed = GUI:SliderInt("##LargeTelegraphsMin",largeFriend.min*100,1,100,"%i%%")
 					if changed then
 						largeFriend.min = val / 100
@@ -1844,7 +2363,7 @@ function self.Draw()
 						self.Data.lastLineRGB = Settings.outlineRGB.friend
 						self.Data.lastColorAlpha = val / 100
 					end GUI:SameLine(0,15)
-					GUI:Text("Max: ") GUI:SameLine(0,0)
+					GUI:Text(GetString("Max: ")) GUI:SameLine(0,0)
 					local val2,changed2 = GUI:SliderInt("##LargeTelegraphsMax",largeFriend.max*100,1,100,"%i%%")
 					if changed2 then
 						largeFriend.max = val2 / 100
@@ -1860,7 +2379,7 @@ function self.Draw()
 				end
 				GUI:SameLine(0,5)
 				if Settings.DrawFriendlyAoE then
-					GUI:Text("Friendly")
+					GUI:Text(GetString("Friendly"))
 				else
 					GUI:TextDisabled("Friendly")
 				end if not hovered then hovered = GUI:IsItemHovered() end
@@ -1873,9 +2392,9 @@ function self.Draw()
 					GUI:BeginTooltip()
 					GUI:PushTextWrapPos(300)
 					local str = (function() if Settings.DrawFriendlyAoE then return "Disable" else return "Enable" end end)()
-					GUI:Text("Right Click to [") GUI:SameLine(0,0)
-					GUI:TextColored(1,1,0,1,str) GUI:SameLine(0,0)
-					GUI:Text("]")
+					GUI:Text(GetString("Right Click to [")) GUI:SameLine(0,0)
+					GUI:TextColored(1,1,0,1,GetString(str)) GUI:SameLine(0,0)
+					GUI:Text(GetString("]"))
 					GUI:PopTextWrapPos()
 					GUI:EndTooltip()
 				end GUI:SameLine(0,25)
@@ -1889,8 +2408,9 @@ function self.Draw()
 					Settings.DrawAttackRange = not Settings.DrawAttackRange save(true)
 				end
 				if GUI:BeginPopup("Attack Range Color Editor", GUI.WindowFlags_NoTitleBar + GUI.WindowFlags_NoResize + GUI.WindowFlags_NoMove + GUI.WindowFlags_NoScrollbar + GUI.WindowFlags_NoScrollWithMouse + GUI.WindowFlags_NoCollapse + GUI.WindowFlags_NoSavedSettings) then
-					GUI:ColorEditMode(GUI.ColorEditMode_NoInputs + GUI.ColorEditMode_AlphaBar)
-					local r,g,b,a,changed = GUI:ColorEdit4("Attack Range (Inside) Color##AttackRange",outlineRangeInside.r, outlineRangeInside.g, outlineRangeInside.b, outlineRangeInside.a)
+					GUI:ColorEditMode(ColorEditModeFlags)
+					--local r,g,b,a,changed = GUI:ColorEdit4("Attack Range (Inside) Color##AttackRange",outlineRangeInside.r, outlineRangeInside.g, outlineRangeInside.b, outlineRangeInside.a)
+					local r,g,b,a,changed = self.ColorEditor("Attack Range (Inside) Color##AttackRange",outlineRangeInside.r, outlineRangeInside.g, outlineRangeInside.b, outlineRangeInside.a)
 					if (changed) then
 						self.Data.lastColorChange = Now()
 						self.Data.lastLineRGB = {r=r,g=g,b=b,a=a}
@@ -1902,7 +2422,8 @@ function self.Draw()
 						self.Data.lastLineRGB = {r=r,g=g,b=b,a=a}
 						self.Data.lastColorAlpha = 0
 					end
-					local r,g,b,a,changed = GUI:ColorEdit4("Attack Range (Outside) Color##AttackRange",outlineRangeOutside.r, outlineRangeOutside.g, outlineRangeOutside.b, outlineRangeOutside.a)
+					--local r,g,b,a,changed = GUI:ColorEdit4("Attack Range (Outside) Color##AttackRange",outlineRangeOutside.r, outlineRangeOutside.g, outlineRangeOutside.b, outlineRangeOutside.a)
+					local r,g,b,a,changed = self.ColorEditor("Attack Range (Outside) Color##AttackRange",outlineRangeOutside.r, outlineRangeOutside.g, outlineRangeOutside.b, outlineRangeOutside.a)
 					if (changed) then
 						self.Data.lastColorChange = Now()
 						self.Data.lastLineRGB = {r=r,g=g,b=b,a=a}
@@ -1915,8 +2436,8 @@ function self.Draw()
 						self.Data.lastColorAlpha = 0
 					end
 					GUI:AlignFirstTextHeightToWidgets()
-					GUI:Text("Line Size: ") GUI:SameLine(0,0) GUI:PushItemWidth(100)
-					local val,changed = GUI:SliderInt("##OutlineThicknessAttackRange",outlineThicknessRange,1,10)
+					GUI:Text(GetString("Line Size: ")) GUI:SameLine(0,0) GUI:PushItemWidth(100)
+					local val,changed = GUI:SliderFloat("##OutlineThicknessAttackRange",outlineThicknessRange,1,10)
 					if changed then
 						self.Data.lastColorChange = Now()
 						self.Data.lastLineRGB = {r=r,g=g,b=b,a=a}
@@ -1924,12 +2445,55 @@ function self.Draw()
 						Settings.outlineThickness.range = val
 						self.Data.lastLineThickness = val save(true)
 					end GUI:PopItemWidth()
+					local checked,changed = GUI:Checkbox("Always Show Attack Range",Settings.AlwaysShowAttackRange)
+					if changed then
+						Settings.AlwaysShowAttackRange = checked
+						save(true)
+					end
+					local checked,changed = GUI:Checkbox("Always Show Melee Range",Settings.AlwaysShowMeleeRange)
+					if changed then
+						Settings.AlwaysShowMeleeRange = checked
+						save(true)
+					end
+
+
+					local checked,changed = GUI:Checkbox("Draw Auto-Attack Range",Settings.DrawAutoAttackRange)
+					if changed then
+						Settings.DrawAutoAttackRange = checked
+						save(true)
+					end
+					local checked,changed = GUI:Checkbox("Draw Intercardinal Lines",Settings.DrawIntercardinal)
+					if changed then
+						Settings.DrawIntercardinal = checked
+						save(true)
+					end
+					local checked,changed = GUI:Checkbox("Draw Cardinal Lines",Settings.DrawCardinal)
+					if changed then
+						Settings.DrawCardinal = checked
+						save(true)
+					end
+					local checked,changed = GUI:Checkbox("Draw Rear Lines",Settings.DrawRear)
+					if changed then
+						Settings.DrawRear = checked
+						save(true)
+					end
+					local checked,changed = GUI:Checkbox("Draw True North Line",Settings.DrawTrueNorth)
+					if changed then
+						Settings.DrawTrueNorth = checked
+						save(true)
+					end
+					local checked,changed = GUI:Checkbox("Extend Directional Lines",Settings.ExtendLines)
+					if changed then
+						Settings.ExtendLines = checked
+						save(true)
+					end
+
 
 					GUI:EndPopup()
 				end
 				GUI:SameLine(0,5)
 				if Settings.DrawAttackRange then
-					GUI:Text("Attack Range")
+					GUI:Text(GetString("Attack Range"))
 				else
 					GUI:TextDisabled("Attack Range")
 				end if not hovered then hovered = GUI:IsItemHovered() end
@@ -1942,9 +2506,9 @@ function self.Draw()
 					GUI:BeginTooltip()
 					GUI:PushTextWrapPos(300)
 					local str = (function() if Settings.DrawAttackRange then return "Disable" else return "Enable" end end)()
-					GUI:Text("Right Click to [") GUI:SameLine(0,0)
-					GUI:TextColored(1,1,0,1,str) GUI:SameLine(0,0)
-					GUI:Text("]")
+					GUI:Text(GetString("Right Click to [")) GUI:SameLine(0,0)
+					GUI:TextColored(1,1,0,1,GetString(str)) GUI:SameLine(0,0)
+					GUI:Text(GetString("]"))
 					GUI:PopTextWrapPos()
 					GUI:EndTooltip()
 				end
@@ -1969,7 +2533,7 @@ function self.Draw()
 				GUI:AlignFirstTextHeightToWidgets()
 
 				local hovered = false
-				GUI:Text("Vertices Spacing: ") if not hovered then hovered = GUI:IsItemHovered() end
+				GUI:Text(GetString("Vertices Spacing: ")) if not hovered then hovered = GUI:IsItemHovered() end
 				GUI:SameLine(0,0) GUI:PushItemWidth(60)
 				local val,changed = GUI:SliderFloat("##VerticesSpacing",Settings.verticesSpacing, 0.1, 3,"%.1f")
 				if changed and val > 0 then
@@ -1979,17 +2543,16 @@ function self.Draw()
 				if hovered then
 					GUI:BeginTooltip()
 					GUI:PushTextWrapPos(300)
-					GUI:TextColored(1,0,0,1,"[Advanced] ") GUI:SameLine(0,0)
-					GUI:TextColored(1,1,0,1,"This setting will impact system performance.")
-					GUI:Text("When drawing curved lines the spacing determines how smooth the curve ends up being. The lower the value the more segments required to draw the telegraph, and each telegraph being drawn amplifies the demand further.")
-					GUI:Text("If you feel like telegraphs are straining your computer's performance, then you can make the spacing higher (default is 0.5).")
-					GUI:TextColored(1,1,0,1,"Leave this set to 0 for unlimited draw distance.\n[CTRL]+[Left Mouse Button] to manually type in amount instead of dragging.")
+					GUI:TextColored(1,0,0,1,GetString("[Advanced] ")) GUI:SameLine(0,0)
+					GUI:TextColored(1,1,0,1,GetString("This setting will impact system performance."))
+					GUI:Text(GetString("When drawing curved lines the spacing determines how smooth the curve ends up being. The lower the value the more segments required to draw the telegraph, and each telegraph being drawn amplifies the demand further."))
+					GUI:Text(GetString("If you feel like telegraphs are straining your computer's performance, then you can make the spacing higher (default is 0.5)."))
 					GUI:PopTextWrapPos()
 					GUI:EndTooltip()
 				end GUI:SameLine(0,25)
 
 				local hovered = false
-				GUI:Text("Max Segments: ") if not hovered then hovered = GUI:IsItemHovered() end
+				GUI:Text(GetString("Max Segments: ")) if not hovered then hovered = GUI:IsItemHovered() end
 				GUI:SameLine(0,0) GUI:PushItemWidth(60)
 				local val,changed = GUI:SliderInt("##MaxSegments",Settings.maxSegments, 10, 100)
 				if changed and val > 0 then
@@ -1999,31 +2562,99 @@ function self.Draw()
 				if hovered then
 					GUI:BeginTooltip()
 					GUI:PushTextWrapPos(300)
-					GUI:TextColored(1,0,0,1,"[Advanced] ") GUI:SameLine(0,0)
-					GUI:TextColored(1,1,0,1,"This setting will impact system performance.")
-					GUI:Text("When drawing curved lines the number of segments determines how smooth the curve ends up being. The higher the value the smoother the line, and smaller telegraphs won't reach this limit.")
-					GUI:Text("Larger telegraphs will require more segments to complete the curve, so to keep things under control we set a cap on how many segments each telegraph can utilize.")
-					GUI:Text("If you feel like telegraphs are straining your computer's performance, then you can lower the max segments (default is 50).")
-					GUI:TextColored(1,1,0,1,"Leave this set to 0 for unlimited draw distance.\n[CTRL]+[Left Mouse Button] to manually type in amount instead of dragging.")
+					GUI:TextColored(1,0,0,1,GetString("[Advanced] ")) GUI:SameLine(0,0)
+					GUI:TextColored(1,1,0,1,GetString("This setting will impact system performance."))
+					GUI:Text(GetString("When drawing curved lines the number of segments determines how smooth the curve ends up being. The higher the value the smoother the line, and smaller telegraphs won't reach this limit."))
+					GUI:Text(GetString("Larger telegraphs will require more segments to complete the curve, so to keep things under control we set a cap on how many segments each telegraph can utilize."))
+					GUI:Text(GetString("If you feel like telegraphs are straining your computer's performance, then you can lower the max segments (default is 50)."))
 					GUI:PopTextWrapPos()
 					GUI:EndTooltip()
 				end GUI:SameLine(0,25)
 
 
-				--Settings.DrawFriendlyAoE = GUI:Checkbox("Draw Friendly AoE",Settings.DrawFriendlyAoE)
+				--Settings.DrawFriendlyAoE = GUI:Checkbox(GetString("Draw Friendly AoE"),Settings.DrawFriendlyAoE)
 				--GUI:SameLine(0,15)
-				--Settings.DrawFriendlyOutRange = GUI:Checkbox("Only if Outside of AoE",Settings.DrawFriendlyOutRange)
+				--Settings.DrawFriendlyOutRange = GUI:Checkbox(GetString("Only if Outside of AoE"),Settings.DrawFriendlyOutRange)
 				--GUI:SameLine(0,15)
-				--Settings.DrawFriendlyLB = GUI:Checkbox("Draw Limit Break",Settings.DrawFriendlyLB)
-			elseif (tabname == GetString("Markers")) then
-				GUI:Text("Work In Progress")
+				--Settings.DrawFriendlyLB = GUI:Checkbox(GetString("Draw Limit Break"),Settings.DrawFriendlyLB)
+			--elseif (tabname == GetString("Markers")) then
+			--	Settings.MarkPlayers = GUI:Checkbox(GetString("Mark Players"),Settings.MarkPlayers)
+			--	GUI:Text(GetString("Work In Progress"))
+			
+			elseif (tabname == GetString("Blacklist")) then
+
+				GUI:TextWrapped("Blacklisted AOEs will not have any draws. Right click on the box to add new IDs to the blacklist.")
+				local tbl = Settings.aoeIDUserBlacklist
+				local sx,sy = GUI:GetWindowSize()
+				GUI:BeginChild("Moogle Telegraphs##Blacklist",sx-45,sy-100,true)
+				local flags = GUI.WindowFlags_NoTitleBar + GUI.WindowFlags_NoResize + GUI.WindowFlags_NoScrollbar + GUI.WindowFlags_NoScrollWithMouse + GUI.WindowFlags_NoCollapse + GUI.WindowFlags_NoSavedSettings
+				local selected = false
+				if table.valid(tbl) then
+					for k,v in table.pairsbykeys(tbl) do
+						--local contains = (function() if table.contains(tbl, k) then return true else return false end end)()
+						local _,clicked = GUI:Selectable(k.." - "..v,false) 
+						if GUI:IsItemClicked(1) then 
+							selected = true
+							tbl[k] = nil
+							d("removing "..k.." - "..v.." from the aoe blacklist.")
+						end
+					end
+				end
+				GUI:EndChild()
+				if GUI:IsItemClicked(1) and not selected then
+					GUI:OpenPopup("menu1")
+				end
+				if GUI:BeginPopup("menu1", flags) then
+					Data.newblacklistid = GUI:InputText("aoe ID",Data.newblacklistid, GUI.InputTextFlags_EnterReturnsTrue)
+					Data.newblacklistlabel = GUI:InputText("label",Data.newblacklistlabel, GUI.InputTextFlags_EnterReturnsTrue)
+					if GUI:Button(GetString("Add")) then 
+						table.insert(Settings.aoeIDUserBlacklist,Data.newblacklistid,Data.newblacklistlabel)
+						d("Added new blacklist entry succesfully.")
+						save(true)
+						GUI:CloseCurrentPopup()
+					end
+					GUI:EndPopup()
+				end
+
+			elseif (tabname == GetString("Recent Draws")) then
+
+				GUI:Columns(4, "##aoelist", true)
+				GUI:BeginGroup()
+				GUI:Text("ID")GUI:NextColumn()
+				GUI:Text("Name")GUI:NextColumn()
+				GUI:Text("Map")GUI:NextColumn()
+				GUI:Text("Blacklist")GUI:NextColumn()
+				GUI:Separator()
+
+				for id, map in pairs(self.Data.BlacklistRecorder) do
+					local ac = ActionList:Get(1, id)
+					local mapName = GetMapName(map)
+					GUI:Text(id) GUI:NextColumn()
+					GUI:Text(ac.name) GUI:NextColumn()
+					GUI:Text(mapName) GUI:NextColumn()
+
+					if GUI:Button("Blacklist##MBL_blacklistbtn"..id) then
+						if not self.Settings.aoeIDUserBlacklist[id] then
+							self.Data.BlacklistRecorder[id] = nil
+							self.Settings.aoeIDUserBlacklist[id] = ac.name .. " - " .. mapName
+							save(true)
+						end
+					end GUI:NextColumn()
+				end
+
+				GUI:EndGroup()
+
 			elseif (tabname == GetString("Extras")) then
-				GUI:Text("Show Entity Heading:")
+
+				GUI:Text(GetString("Show Entity Heading:"))
 				GUI:BeginChild("##HeadingFrame",0,250,true)
 				local hEntities,minRadius,minFront,fill,outline,thickness = Settings.showHeadingEntities,Settings.showHeadingMinRadius,Settings.showHeadingMinFront,Settings.showHeadingFillingRGB,Settings.showHeadingOutlineRGB,Settings.showHeadingOutlineThickness
+				Settings.DrawHeadingEntities = GUI:Checkbox(GetString("Show Entity Headings"),Settings.DrawHeadingEntities) GUI:SameLine(0,15)
+				Settings.showHeadingUntargetableMovingEntities = GUI:Checkbox(GetString("Draw All Moving Untargetable Entities"),Settings.showHeadingUntargetableMovingEntities)
 
-				GUI:ColorEditMode(GUI.ColorEditMode_NoInputs + GUI.ColorEditMode_AlphaBar)
-				local r,g,b,a,changed = GUI:ColorEdit4("Heading Color##HeadingColor",fill.r, fill.g, fill.b, fill.a)
+				GUI:ColorEditMode(ColorEditModeFlags)
+				--local r,g,b,a,changed = GUI:ColorEdit4("Heading Color##HeadingColor",fill.r, fill.g, fill.b, fill.a)
+				local r,g,b,a,changed = self.ColorEditor("Heading Color##HeadingColor",fill.r, fill.g, fill.b, fill.a)
 				if (changed) then
 					self.Data.lastColorChange = Now()
 					self.Data.lastColorRGB = {r=r,g=g,b=b}
@@ -2037,8 +2668,9 @@ function self.Draw()
 					self.Data.lastLineRGB = outline
 					self.Data.lastColorAlpha = a
 				end GUI:SameLine(0,15)
-				GUI:ColorEditMode(GUI.ColorEditMode_NoInputs + GUI.ColorEditMode_AlphaBar)
-				local r2,g2,b2,a2,changed2 = GUI:ColorEdit4("Outline Color##HeadingColorOutline",outline.r, outline.g, outline.b, outline.a)
+				GUI:ColorEditMode(ColorEditModeFlags)
+				--local r2,g2,b2,a2,changed2 = GUI:ColorEdit4("Outline Color##HeadingColorOutline",outline.r, outline.g, outline.b, outline.a)
+				local r2,g2,b2,a2,changed2 = self.ColorEditor("Outline Color##HeadingColorOutline",outline.r, outline.g, outline.b, outline.a)
 				if (changed2) then
 					self.Data.lastColorChange = Now()
 					self.Data.lastColorRGB = {r=fill.r,g=fill.g,b=fill.b}
@@ -2052,8 +2684,8 @@ function self.Draw()
 					self.Data.lastLineRGB = {r=r2,g=g2,b=b2,a=a2}
 					self.Data.lastColorAlpha = a
 				end GUI:SameLine(0,15)
-				GUI:Text("Line Size: ") GUI:SameLine(0,0) GUI:PushItemWidth(100)
-				local val,changed = GUI:SliderInt("##OutlineThicknessHeading",thickness,1,10)
+				GUI:Text(GetString("Line Size: ")) GUI:SameLine(0,0) GUI:PushItemWidth(100)
+				local val,changed = GUI:SliderFloat("##OutlineThicknessHeading",thickness,1,10)
 				if changed then
 					self.Data.lastColorChange = Now()
 					self.Data.lastColorRGB = {r=r,g=g,b=b}
@@ -2063,7 +2695,7 @@ function self.Draw()
 					self.Data.lastLineThickness = val save(true)
 				end GUI:PopItemWidth()
 
-				GUI:Text("Minimum Radius: ") GUI:SameLine(0,0) GUI:PushItemWidth(100)
+				GUI:Text(GetString("Minimum Radius: ")) GUI:SameLine(0,0) GUI:PushItemWidth(100)
 				local val,changed = GUI:SliderFloat("##MinimumRadiusHeading",minRadius,0.1,10,"%.1f")
 				if changed then
 					self.Data.lastColorChange = Now()
@@ -2072,7 +2704,7 @@ function self.Draw()
 					self.Data.lastColorAlpha = a
 					Settings.showHeadingMinRadius = val save(true)
 				end GUI:PopItemWidth() GUI:SameLine(0,15)
-				GUI:Text("Minimum Frontal: ") GUI:SameLine(0,0) GUI:PushItemWidth(100)
+				GUI:Text(GetString("Minimum Frontal: ")) GUI:SameLine(0,0) GUI:PushItemWidth(100)
 				local val,changed = GUI:SliderFloat("##MinimumFrontalHeading",minFront,0.1,10,"%.1f")
 				GUI:PushStyleVar(GUI.StyleVar_ItemSpacing, 0, Style.itemspacing.y)
 				GUI:PushStyleVar(GUI.StyleVar_FramePadding, 0, Style.framepadding.y)
@@ -2084,6 +2716,9 @@ function self.Draw()
 					self.Data.lastColorAlpha = a
 					Settings.showHeadingMinFront = val save(true)
 				end GUI:PopItemWidth()
+
+
+				local menu1,menu2,add,edit = false,false,false,false
 				GUI:BeginChild("##HeadingEntities",0,0,true)
 				local width = GUI:GetContentRegionAvailWidth()
 
@@ -2110,19 +2745,16 @@ function self.Draw()
 					local padding = ((width/3)-GUI:CalcTextSize(str))/2
 					GUI:Selectable("##"..i.."dummy",false,GUI.SelectableFlags_SpanAllColumns) if GUI:IsItemHovered() then hovered = true end if GUI:IsItemClicked(1) then clicked = true end GUI:SameLine(0,0)
 					GUI:Dummy(padding,height) GUI:SameLine(0,0) GUI:Selectable(str.."##"..i.."mapid",false,GUI.SelectableFlags_SpanAllColumns) if GUI:IsItemHovered() then hovered = true end if GUI:IsItemClicked(1) then clicked = true end GUI:NextColumn()
-					--GUI:Selectable(string.rep(" ",Round(padding/space,1))..str.."##"..i.."mapid",false,GUI.SelectableFlags_SpanAllColumns,width,height) GUI:NextColumn()
 
 					GUI:SetColumnWidth(-1,width/3)
 					local str = e.contentid or 0
 					local padding = ((width/3)-GUI:CalcTextSize(str))/2
 					GUI:Dummy(padding,height) GUI:SameLine(0,0) GUI:Selectable(str.."##"..i.."contentid",false,GUI.SelectableFlags_SpanAllColumns) if GUI:IsItemHovered() then hovered = true end if GUI:IsItemClicked(1) then clicked = true end GUI:NextColumn()
-					--GUI:Selectable(string.rep(" ",Round(padding/space,1))..str.."##"..i.."contentid",false,GUI.SelectableFlags_SpanAllColumns,width,height) GUI:NextColumn()
 
 					GUI:SetColumnWidth(-1,width/3)
 					local str = e.name or ""
 					local padding = ((width/3)-GUI:CalcTextSize(str))/2
 					GUI:Dummy(padding,height) GUI:SameLine(0,0) GUI:Selectable(str.."##"..i.."name",false,GUI.SelectableFlags_SpanAllColumns) if GUI:IsItemHovered() then hovered = true end if GUI:IsItemClicked(1) then clicked = true end GUI:NextColumn()
-					--GUI:Selectable(string.rep(" ",Round(padding/space,1))..str.."##"..i.."name",false,GUI.SelectableFlags_SpanAllColumns,width,height) GUI:NextColumn()
 					local note = e.note
 					if hovered and note and note ~= "" then
 						GUI:PushStyleVar(GUI.StyleVar_FramePadding, Style.framepadding.x, Style.framepadding.y)
@@ -2136,28 +2768,7 @@ function self.Draw()
 					end
 					if clicked then
 						Data.editHeadingEntry = i
-						--GUI:OpenPopup("Edit Heading Entry")
-						GUI:OpenPopup("Add/Edit")
-					end
-					if Data.editHeadingEntry == i then
-						local add,edit = false,false
-						GUI:PushStyleVar(GUI.StyleVar_FramePadding, Style.framepadding.x, Style.framepadding.y)
-						GUI:PushStyleVar(GUI.StyleVar_WindowPadding, Style.windowpadding.x, Style.windowpadding.y)
-						if GUI:BeginPopup("Add/Edit", GUI.WindowFlags_NoTitleBar + GUI.WindowFlags_NoResize + GUI.WindowFlags_NoMove + GUI.WindowFlags_NoScrollbar + GUI.WindowFlags_NoScrollWithMouse + GUI.WindowFlags_NoCollapse + GUI.WindowFlags_NoSavedSettings) then
-							local _,clicked = GUI:Selectable("Add",false) if clicked then add = true end
-							local _,clicked = GUI:Selectable("Edit",false) if clicked then edit = true end
-							GUI:Separator()
-							local _,clicked = GUI:Selectable("Delete",false) if clicked then delete = true end
-							GUI:EndPopup()
-						end
-						GUI:PopStyleVar(2)
-						if add then
-							Data.editHeadingEntry = Data.editHeadingEntry + 1
-							table.insert(Settings.showHeadingEntities,Data.editHeadingEntry,{ contentid = "0", customFront = 0, customHitRadius = 0, mapid = 0, name = "", note = ""})
-							GUI:OpenPopup("Edit Heading Entry")
-						elseif edit then
-							GUI:OpenPopup("Edit Heading Entry")
-						end
+						menu1 = true
 					end
 				end
 				if #hEntities < 8 then
@@ -2165,62 +2776,98 @@ function self.Draw()
 						GUI:Text(" ") GUI:NextColumn() GUI:Text(" ") GUI:NextColumn() GUI:Text(" ") GUI:NextColumn()
 					end
 				end
-
-				if not GUI:IsPopupOpen("Add/Edit") and GUI:IsMouseClicked(1) then
-					GUI:OpenPopup("Add/Edit 2")
+				GUI:Columns(1)
+				GUI:EndChild()
+				if not menu1 and GUI:IsItemClicked(1) then
+					Data.editHeadingEntry = 0
+					menu2 = true
 				end
-				local add = false
+
+				if menu1 then
+					GUI:OpenPopup("Add/Edit1")
+				elseif menu2 then
+					GUI:OpenPopup("Add/Edit2")
+				end
+
 				GUI:PushStyleVar(GUI.StyleVar_FramePadding, Style.framepadding.x, Style.framepadding.y)
 				GUI:PushStyleVar(GUI.StyleVar_WindowPadding, Style.windowpadding.x, Style.windowpadding.y)
-				if GUI:BeginPopup("Add/Edit 2", GUI.WindowFlags_NoTitleBar + GUI.WindowFlags_NoResize + GUI.WindowFlags_NoMove + GUI.WindowFlags_NoScrollbar + GUI.WindowFlags_NoScrollWithMouse + GUI.WindowFlags_NoCollapse + GUI.WindowFlags_NoSavedSettings) then
-					local _,clicked = GUI:Selectable("Add",false) if clicked then add = true end
+				local flags = GUI.WindowFlags_NoTitleBar + GUI.WindowFlags_NoResize + GUI.WindowFlags_NoMove + GUI.WindowFlags_NoScrollbar + GUI.WindowFlags_NoScrollWithMouse + GUI.WindowFlags_NoCollapse + GUI.WindowFlags_NoSavedSettings
+				if GUI:BeginPopup("Add/Edit1", flags) then
+					local _,clicked = GUI:Selectable(GetString("Add"),false) if clicked then add = true end
+					local _,clicked = GUI:Selectable(GetString("Edit"),false) if clicked then edit = true end
+					GUI:Separator()
+					--local _,clicked = GUI:Selectable(GetString("Delete"),false) if clicked then delete = true end
+					local max,time = 2500,TimeSince(deleteStart)
+					local progress = (function() if deleteStart == 0 then return 0 elseif time <= max then return time / max elseif time > max then return 1 else return 0 end end)()
+					GUI:ProgressBar( progress, 100, height, "Delete"..(function() if progress > 0 then return " "..tostring(progress*100) else return "" end end)())
+					if GUI:IsItemHovered() then
+						if GUI:IsMouseDown(0) then
+							if deleteStart == 0 then deleteStart = Now() end
+							if progress == 1 then
+								table.remove(Settings.showHeadingEntities,Data.editHeadingEntry)
+								Data.editHeadingEntry = 0
+								deleteStart = 0
+								GUI:CloseCurrentPopup()
+								save(true)
+							end
+						elseif deleteStart ~= 0 then deleteStart = 0 end
+					elseif deleteStart ~= 0 then deleteStart = 0 end
 					GUI:EndPopup()
 				end
-				GUI:PopStyleVar(2)
+				if GUI:BeginPopup("Add/Edit2", flags) then
+					local _,clicked = GUI:Selectable(GetString("Add"),false) if clicked then add = true end
+					GUI:EndPopup()
+				end
+
 				if add then
-					Data.editHeadingEntry = (#Settings.showHeadingEntities or 0) + 1
-					table.insert(Settings.showHeadingEntities,Data.editHeadingEntry,{ contentid = "0", customFront = 0, customHitRadius = 0, mapid = 0, name = "", note = ""})
+					if Data.editHeadingEntry > 0 then
+						Data.editHeadingEntry = Data.editHeadingEntry + 1
+					else
+						Data.editHeadingEntry = (#Settings.showHeadingEntities or 0) + 1
+					end
+					table.insert(Settings.showHeadingEntities,Data.editHeadingEntry,{ contentid = "", customFront = 0, customHitRadius = 0, mapid = 0, name = "", note = ""})
+					GUI:OpenPopup("Edit Heading Entry")
+				elseif edit then
 					GUI:OpenPopup("Edit Heading Entry")
 				end
-				GUI:PushStyleVar(GUI.StyleVar_FramePadding, Style.framepadding.x, Style.framepadding.y)
-				GUI:PushStyleVar(GUI.StyleVar_WindowPadding, Style.windowpadding.x, Style.windowpadding.y)
-				if GUI:BeginPopup("Edit Heading Entry", GUI.WindowFlags_NoTitleBar + GUI.WindowFlags_NoResize + GUI.WindowFlags_NoMove + GUI.WindowFlags_NoScrollbar + GUI.WindowFlags_NoScrollWithMouse + GUI.WindowFlags_NoCollapse + GUI.WindowFlags_NoSavedSettings) then
+
+				if GUI:BeginPopup("Edit Heading Entry", flags) then
 					local i = Data.editHeadingEntry
 					if tonumber(i) and i > 0 then
 						local entry = Settings.showHeadingEntities[i]
 						local mapid,contentid,customFront,customHitRadius,mapid,name,note = entry.mapid,entry.contentid,entry.customFront,entry.customHitRadius,entry.mapid,entry.name,entry.note
-						GUI:AlignFirstTextHeightToWidgets() GUI:Text("Map ID: ") GUI:SameLine(0,0)
+						GUI:AlignFirstTextHeightToWidgets() GUI:Text(GetString("Map ID: ")) GUI:SameLine(0,0)
 						GUI:PushItemWidth(({GUI:CalcTextSize("123")})[1] + (Style.iteminnerspacing.x * 2))
 						local val,changed = GUI:InputText("##Map ID",mapid,GUI.InputTextFlags_CharsDecimal)
 						if changed and val and val~="" and tonumber(val) >= 0 then
 							entry.mapid = tonumber(val) or 0 save(true)
 						end GUI:PopItemWidth()
 						GUI:PushItemWidth(({GUI:CalcTextSize("1234567")})[1] + (Style.iteminnerspacing.x * 2))
-						GUI:AlignFirstTextHeightToWidgets() GUI:Text("Content ID: ") GUI:SameLine(0,0)
+						GUI:AlignFirstTextHeightToWidgets() GUI:Text(GetString("Content ID: ")) GUI:SameLine(0,0)
 						local val,changed = GUI:InputText("##Content ID",contentid)
 						if changed and val and val~="" then
 							entry.contentid = val or "" save(true)
 						end GUI:PopItemWidth()
-						GUI:AlignFirstTextHeightToWidgets() GUI:Text("Radius: ") GUI:SameLine(0,0)
+						GUI:AlignFirstTextHeightToWidgets() GUI:Text(GetString("Radius/Length: ")) GUI:SameLine(0,0)
 						GUI:PushItemWidth(({GUI:CalcTextSize("123")})[1] + (Style.iteminnerspacing.x * 2))
 						local val,changed = GUI:InputText("##Radius",customHitRadius,GUI.InputTextFlags_CharsDecimal)
 						if changed and val and val~="" and tonumber(val) >= 0 then
 							entry.customHitRadius = tonumber(val) or 0 save(true)
 						end GUI:PopItemWidth()
-						GUI:AlignFirstTextHeightToWidgets() GUI:Text("Front: ") GUI:SameLine(0,0)
+						GUI:AlignFirstTextHeightToWidgets() GUI:Text(GetString("Front/Width: ")) GUI:SameLine(0,0)
 						GUI:PushItemWidth(({GUI:CalcTextSize("123")})[1] + (Style.iteminnerspacing.x * 2))
 						local val,changed = GUI:InputText("##Front",customFront,GUI.InputTextFlags_CharsDecimal)
 						if changed and val and val~="" and tonumber(val) >= 0 then
 							entry.customFront = tonumber(val) or 0 save(true)
 						end GUI:PopItemWidth()
 						GUI:PushItemWidth(({GUI:CalcTextSize("1234567890 1234567890")})[1] + (Style.iteminnerspacing.x * 2))
-						GUI:AlignFirstTextHeightToWidgets() GUI:Text("Name: ") GUI:SameLine(0,0)
+						GUI:AlignFirstTextHeightToWidgets() GUI:Text(GetString("Name: ")) GUI:SameLine(0,0)
 						local val,changed = GUI:InputText("##Name",name)
 						if changed then
 							entry.name = val or "" save(true)
 						end GUI:PopItemWidth()
 						GUI:PushItemWidth(({GUI:CalcTextSize("1234567890 1234567890")})[1] + (Style.iteminnerspacing.x * 2))
-						GUI:AlignFirstTextHeightToWidgets() GUI:Text("Note: ") GUI:SameLine(0,0)
+						GUI:AlignFirstTextHeightToWidgets() GUI:Text(GetString("Note: ")) GUI:SameLine(0,0)
 						local val,changed = GUI:InputText("##Note",note)
 						if changed then
 							entry.note = val or "" save(true)
@@ -2228,24 +2875,36 @@ function self.Draw()
 					end
 					GUI:EndPopup()
 				end
+				if not GUI:IsPopupOpen("Edit Heading Entry") and Data.editHeadingEntry ~= 0 then
+					local entry = Settings.showHeadingEntities[Data.editHeadingEntry]
+					if valid(entry) then
+						if entry.contentid == "" then
+							table.remove(Settings.showHeadingEntities,Data.editHeadingEntry) save(true)
+							Data.editHeadingEntry = 0
+						end
+					end
+				end
+
+
 				GUI:PopStyleVar(2)
-				GUI:Columns(1)
-				GUI:EndChild()
+
 				GUI:PopStyleVar(3)
 				GUI:EndChild()
-				if delete then table.remove(Settings.showHeadingEntities,Data.editHeadingEntry) save(true) end
 
 
 			elseif (tabname == GetString("Debug")) then
-				GUI:Text("Work In Progress")
-				--Settings.DebugRecord = GUI:Checkbox("Record Missed Telegraphs",Settings.DebugRecord) GUI:SameLine(0,15)
-				--Settings.DebugFile = GUI:Checkbox("Output Debug to File",Settings.DebugFile)
-				GUI:Text("Set Unknown Cone Angles to: ") GUI:SameLine(0,0) GUI:PushItemWidth(100)
+				GUI:Text(GetString("Work In Progress"))
+				Settings.DebugTypesEnabled[1] = GUI:Checkbox("Record Casting Actions",Settings.DebugTypesEnabled[1])
+				Settings.DebugTypesEnabled[2] = GUI:Checkbox("Record Channeling Actions",Settings.DebugTypesEnabled[2])
+				Settings.DebugTypesEnabled[3] = GUI:Checkbox("Record Markers",Settings.DebugTypesEnabled[3])
+				--Settings.DebugRecord = GUI:Checkbox(GetString("Record Missed Telegraphs"),Settings.DebugRecord) GUI:SameLine(0,15)
+				--Settings.DebugFile = GUI:Checkbox(GetString("Output Debug to File"),Settings.DebugFile)
+				GUI:Text(GetString("Set Unknown Cone Angles to: ")) GUI:SameLine(0,0) GUI:PushItemWidth(100)
 				local val,changed = GUI:SliderInt("##UnknownConeAngle",Settings.UnknownConeAngle,1,180)
 				if changed and val > 0 then
-					Settings.MaxTelegraphDrawRange = val save(true)
+					Settings.UnknownConeAngle = val save(true)
 				end
-				GUI:Text("Set Unknown Donut Inner-Radius to: ") GUI:SameLine(0,0)
+				GUI:Text(GetString("Set Unknown Donut Inner-Radius to: ")) GUI:SameLine(0,0)
 				local val,changed = GUI:SliderInt("##UnknownDonutRadius",Settings.UnknownDonutRadius,1,10)
 				if changed and val > 0 then
 					Settings.UnknownDonutRadius = val save(true)
@@ -2259,7 +2918,7 @@ function self.Draw()
 			posX,posY = GUI:GetWindowPos()
 			local min,max,rate,spacing,padding = 25,50,5,5,0
 			local windowsize = 25
-			for i=2, #Links do
+			for i=1, #Links do
 				local size = Links[i].size.x
 				if size and size > 0 and size > windowsize then windowsize = size end
 			end
@@ -2270,28 +2929,29 @@ function self.Draw()
 			GUI:PushStyleVar(GUI.StyleVar_ItemSpacing,spacing,spacing)
 			GUI:Begin("MoogleTelegraphs##Sidebar",true,GUI.WindowFlags_NoTitleBar + GUI.WindowFlags_NoResize + GUI.WindowFlags_NoMove + GUI.WindowFlags_NoScrollbar + GUI.WindowFlags_NoScrollWithMouse + GUI.WindowFlags_NoCollapse + GUI.WindowFlags_NoFocusOnAppearing)
 			if GUI:IsWindowFocused("MoogleTelegraphs##Sidebar") then GUI:SetWindowFocus(self.GUI.name) end
-			for i=2, #Links do
-				GUI:Dummy(windowsize-Links[i].size.x,0) GUI:SameLine(0,0)
-				GUI:Image(Links[i].icon,Links[i].size.x,Links[i].size.y)
+			for i=1, #Links do
+				local link = Links[i]
+				GUI:Dummy(windowsize-link.size.x,0) GUI:SameLine(0,0)
+				GUI:Image(link.icon,link.size.x,link.size.y)
 				if GUI:IsItemHovered() then
 					GUI:PopStyleVar(2)
 					GUI:BeginTooltip()
 					GUI:PushTextWrapPos(300)
-					GUI:Text(Links[i].tooltip)
+					GUI:Text(link.tooltip)
 					GUI:PopTextWrapPos()
 					GUI:EndTooltip()
 					GUI:PushStyleVar(GUI.StyleVar_WindowPadding,padding,padding)
 					GUI:PushStyleVar(GUI.StyleVar_ItemSpacing,spacing,spacing)
-					if Links[i].size.x < max then Links[i].size.x = Links[i].size.x + rate end
-					if Links[i].size.y < max then Links[i].size.y = Links[i].size.y + rate end
+					if link.size.x < max then link.size.x = link.size.x + rate end
+					if link.size.y < max then link.size.y = link.size.y + rate end
 					if GUI:IsItemClicked(0) then
-						io.popen([[cmd /c start "" "]]..Links[i].link..[["]]):close()
-					elseif GUI:IsItemClicked(1) then
-						io.popen([[cmd /c start "" "]]..Links[i].link2..[["]]):close()
+						io.popen([[cmd /c start "" "]]..link.link..[["]]):close()
+					elseif GUI:IsItemClicked(1) and link.link2 then
+						io.popen([[cmd /c start "" "]]..link.link2..[["]]):close()
 					end
 				else
-					if Links[i].size.x > min then Links[i].size.x = Links[i].size.x - rate end
-					if Links[i].size.y > min then Links[i].size.y = Links[i].size.y - rate end
+					if link.size.x > min then link.size.x = link.size.x - rate end
+					if link.size.y > min then link.size.y = link.size.y - rate end
 				end
 			end
 			GUI:End()
@@ -2309,16 +2969,58 @@ function self.Draw()
 		local flags = (GUI.WindowFlags_NoInputs + GUI.WindowFlags_NoBringToFrontOnFocus + GUI.WindowFlags_NoTitleBar + GUI.WindowFlags_NoResize + GUI.WindowFlags_NoScrollbar + GUI.WindowFlags_NoCollapse)
 		GUI:Begin("MoogleTelegraphs##MoogleTelegraphs", true, flags)
 		if Settings.DrawPlayerDot then
-			local player = RenderManager:WorldToScreen(p.pos)
-			if valid(player) then
+			if Settings.PlayerDotv2 then
+				--local x,y = RenderManager:WorldToScreen(Player.pos,true)
+				--if x and y then
 				local combatOnly,instanceOnly = Settings.DrawDotCombatOnly,Settings.DrawDotInstanceOnly
 				if (not combatOnly or p.incombat) and (not instanceOnly or InInstance()) then
-					GUI:AddCircleFilled(player.x,player.y,Settings.DotSize,Settings.DotDotU32)
+					local colorFill = Settings.DotDotU32
+					if TensorCore.Avoidance.inAnyAOE(Argus.getCurrentDirectionalAOEs(true), p.pos, avoidanceCallback) or TensorCore.Avoidance.inAnyAOE(Argus.getCurrentGroundAOEs(true), p.pos, avoidanceCallback) then
+						colorFill = GUI:ColorConvertFloat4ToU32(3/255, 169/255, 244/255, 1)
+					end
+					local DotSize = Settings.DotSize
+					--GUI:AddCircleFilled(x,y,DotSize,colorFill)
+					local pos = Player.pos
+					Argus.addCircleFilled (pos.x, pos.y, pos.z, DotSize*0.005, 20, colorFill)
+				end
+			else
+				local player = RenderManager:WorldToScreen(Player.pos)
+				if valid(player) then
+					local combatOnly,instanceOnly = Settings.DrawDotCombatOnly,Settings.DrawDotInstanceOnly
+					if (not combatOnly or p.incombat) and (not instanceOnly or InInstance()) then
+						local colorFill = Settings.DotDotU32
+						if TensorCore.Avoidance.inAnyAOE(Argus.getCurrentDirectionalAOEs(true), p.pos, avoidanceCallback) or TensorCore.Avoidance.inAnyAOE(Argus.getCurrentGroundAOEs(true), p.pos, avoidanceCallback) then
+							colorFill = GUI:ColorConvertFloat4ToU32(3/255, 169/255, 244/255, 1)
+						end
+						local DotSize = Settings.DotSize
+						GUI:AddCircleFilled(player.x,player.y,DotSize,colorFill)
+					end
 				end
 			end
 		end
 		if Settings.DrawHeadingEntities then
 			local hEntities,minRadius,minFront,fill,outline,thickness = Settings.showHeadingEntities,Settings.showHeadingMinRadius,Settings.showHeadingMinFront,Settings.showHeadingFillingRGB,Settings.showHeadingOutlineRGB,Settings.showHeadingOutlineThickness
+			if InInstance() and Settings.showHeadingUntargetableMovingEntities then
+				local el = MEntityList("")
+				if valid(el) then
+					for id,entity in pairs(el) do
+						if not entity.targetable and (entity.chartype < 2 or entity.chartype > 4) then
+							local last = Data.hiddenEntityHeading[id]
+							if last then
+								local lastpos,lasttime,pos,pass = last.pos, last.time,entity.pos,false
+								if not table.deepcompare(lastpos,entity.pos) then pass = true
+									Data.hiddenEntityHeading[id] = {pos = entity.pos,time = Now()} end
+								if pass or TimeSince(lasttime) < 500 then
+									local radius,Length = minRadius,minFront
+									Argus.addRectFilled(pos.x, pos.y, pos.z, (radius * 2) + Length, (radius * 2), pos.h,GUI:ColorConvertFloat4ToU32(fill.r,fill.g,fill.b,fill.a),GUI:ColorConvertFloat4ToU32(outline.r,outline.g,outline.b,outline.a),thickness)
+								end
+							else
+								Data.hiddenEntityHeading[id] = {pos = entity.pos,time = 0}
+							end
+						end
+					end
+				end
+			end
 			for i=1,#hEntities do
 				local e = hEntities[i]
 				if e.mapid == 0 or e.mapid == p.localmapid then
@@ -2328,8 +3030,8 @@ function self.Draw()
 							local pos,radius = entity.pos,(function() local h = entity.hitradius
 								if e.customHitRadius and e.customHitRadius > h then return e.customHitRadius
 								elseif h >= minRadius then return h else return minRadius end end)()
-							local Length = (radius * 2) + (function() local f = tonumber(e.customFront) if f and f > 0 then return f else return minFront end end)()
-							Argus.addRectFilled(pos.x, pos.y, pos.z, Length, (radius * 2), pos.h,GUI:ColorConvertFloat4ToU32(fill.r,fill.g,fill.b,fill.a),GUI:ColorConvertFloat4ToU32(outline.r,outline.g,outline.b,outline.a),thickness)
+							local Length = (function() local f = tonumber(e.customFront) if f and f > 0 then return f else return minFront end end)()
+							Argus.addRectFilled(pos.x, pos.y, pos.z, (radius * 2) + Length, (radius * 2), pos.h,GUI:ColorConvertFloat4ToU32(fill.r,fill.g,fill.b,fill.a),GUI:ColorConvertFloat4ToU32(outline.r,outline.g,outline.b,outline.a),thickness)
 						end
 					end
 				end
@@ -2338,21 +3040,87 @@ function self.Draw()
 		if Settings.DrawAttackRange then
 			local target = MGetTarget()
 			if valid(target) and target.attackable then
-				local maxRange,dist,outlineRGB = ml_global_information.AttackRange + 1,Distance3D(p,target),Settings.outlineRGB
-				if dist > maxRange then
-					local rangeOutside,pos,Radius,maxSegments = outlineRGB.rangeOutside,target.pos,target.hitradius + p.hitradius + maxRange,Settings.maxSegments
-					local Segments = (function() local seg = ((Radius * 2) * math.pi) / Settings.verticesSpacing if seg <= maxSegments then return seg else return maxSegments end end)()
-					Argus.addCircleFilled(pos.x, pos.y, pos.z, Radius, Segments,nil,
-							GUI:ColorConvertFloat4ToU32(rangeOutside.r,rangeOutside.g,rangeOutside.b,rangeOutside.a),Settings.outlineThickness.range)
-				else
-					local buffer = maxRange - dist
-					local alphaPercent = (1.5 - buffer) / 1.5
-					if alphaPercent <= 1 then
-						local rangeInside,pos,Radius,maxSegments = outlineRGB.rangeInside,target.pos,target.hitradius + p.hitradius + maxRange,Settings.maxSegments
+				local AttackRange,MeleeRange = ml_global_information.AttackRange + 1,3
+				local IsPvP = IsPVPMap(Player.localmapid)
+				if IsPvP then
+					if AttackRange == 3 then AttackRange = 5 end
+					if AttackRange == 25 then AttackRange = 30 end
+					MeleeRange = 5
+				end
+				local maxRanges,dist,outlineRGB = {AttackRange},Distance3D(p,target),Settings.outlineRGB
+				local jobOverrides = Settings.AttackRangeOverrides
+				if jobOverrides[Player.job] ~= nil then
+					maxRanges = jobOverrides[Player.job]
+				end
+				if Settings.AlwaysShowMeleeRange and not table.find(maxRanges,MeleeRange) then table.insert(maxRanges,MeleeRange) end
+				if not IsPvP then
+					local AutoAttackRange = AttackRange - 0.9
+					if Settings.DrawAutoAttackRange and not table.find(maxRanges,AutoAttackRange) then table.insert(maxRanges,AutoAttackRange) end
+				end
+				for _, maxRange in pairs(maxRanges) do
+					if dist > maxRange then
+						local rangeOutside,pos,Radius,maxSegments = outlineRGB.rangeOutside,target.pos,target.hitradius + p.hitradius + maxRange,Settings.maxSegments
 						local Segments = (function() local seg = ((Radius * 2) * math.pi) / Settings.verticesSpacing if seg <= maxSegments then return seg else return maxSegments end end)()
-						local alpha = rangeInside.a * alphaPercent
 						Argus.addCircleFilled(pos.x, pos.y, pos.z, Radius, Segments,nil,
-								GUI:ColorConvertFloat4ToU32(rangeInside.r,rangeInside.g,rangeInside.b,alpha),Settings.outlineThickness.range)
+								GUI:ColorConvertFloat4ToU32(rangeOutside.r,rangeOutside.g,rangeOutside.b,rangeOutside.a),Settings.outlineThickness.range)
+					else
+						local buffer = maxRange - dist
+						local alphaPercent = (1.5 - buffer) / 1.5
+						if Settings.AlwaysShowAttackRange then
+							local minlock = outlineRGB.rangeOutside.a * 0.85
+							if alphaPercent < minlock then alphaPercent = minlock end
+						end
+						if alphaPercent <= 1 then
+							local rangeInside,pos,Radius,maxSegments = outlineRGB.rangeInside,target.pos,target.hitradius + p.hitradius + maxRange,Settings.maxSegments
+							local Segments = (function() local seg = ((Radius * 2) * math.pi) / Settings.verticesSpacing if seg <= maxSegments then return seg else return maxSegments end end)()
+							local alpha = rangeInside.a * alphaPercent
+							Argus.addCircleFilled(pos.x, pos.y, pos.z, Radius, Segments,nil,
+									GUI:ColorConvertFloat4ToU32(rangeInside.r,rangeInside.g,rangeInside.b,alpha),Settings.outlineThickness.range)
+						end
+					end
+				end
+			end
+			if Settings.DrawTrueNorth then
+				local target = MGetTarget()
+				if valid(target) and target.attackable then
+					local pos,length = target.pos,4 + target.hitradius + Player.hitradius
+					local TrueNorthRGB = Settings.TrueNorthRGB
+					Argus.addRectFilled(pos.x, pos.y, pos.z, length, 0, math.pi, GUI:ColorConvertFloat4ToU32(TrueNorthRGB.r,TrueNorthRGB.g,TrueNorthRGB.b,TrueNorthRGB.a))
+				end
+			end
+			local DrawCardinal,DrawIntercardinal,DrawRear = Settings.DrawCardinal,Settings.DrawIntercardinal,Settings.DrawRear
+			if DrawCardinal or DrawIntercardinal or DrawRear then
+				local target = MGetTarget()
+				if valid(target) and target.attackable then
+					local pos,length = target.pos,3 + target.hitradius + Player.hitradius
+					local CardinalRGB,IntercardinalRGB = Settings.CardinalRGB,Settings.IntercardinalRGB
+					if Settings.ExtendLines then
+						local len = Distance2D(Player.pos,pos,true)
+						if len > length then length = len end
+					end
+					local pos1 = GetPosFromDistanceHeading(pos, length, pos.h)
+					if DrawCardinal then
+						Argus.addRectFilled(pos.x, pos.y, pos.z, length, 0, pos.h, GUI:ColorConvertFloat4ToU32(CardinalRGB.r,CardinalRGB.g,CardinalRGB.b,CardinalRGB.a))
+					end
+					--local nextpos = pos1
+					for i=1,7 do
+						local heading = pos.h + (math.pi * ( 0.25 * i ))
+						--local nextpos = GetPosFromDistanceHeading(pos, length, heading)
+						--if not DrawRear or i == 3 or i == 5 then
+							if i % 2 == 0 then
+								-- even, cardinal
+								if DrawCardinal then
+									Argus.addRectFilled(pos.x, pos.y, pos.z, length, 0, heading, GUI:ColorConvertFloat4ToU32(CardinalRGB.r,CardinalRGB.g,CardinalRGB.b,CardinalRGB.a))
+								end
+							elseif DrawIntercardinal or DrawRear then -- odd, intercardinal
+								if DrawRear and (i == 3 or i == 5) then
+									local RearColorRGB = Settings.RearColorRGB
+									Argus.addRectFilled(pos.x, pos.y, pos.z, length, 0, heading, GUI:ColorConvertFloat4ToU32(RearColorRGB.r,RearColorRGB.g,RearColorRGB.b,RearColorRGB.a))
+								elseif DrawIntercardinal then
+									Argus.addRectFilled(pos.x, pos.y, pos.z, length, 0, heading, GUI:ColorConvertFloat4ToU32(IntercardinalRGB.r,IntercardinalRGB.g,IntercardinalRGB.b,IntercardinalRGB.a))
+								end
+							end
+						--end
 					end
 				end
 			end
@@ -2360,14 +3128,15 @@ function self.Draw()
 
 		local lastColorChange = Data.lastColorChange
 		if TimeSince(lastColorChange) < 5000 then
-			local pos,fill,a,outline,thickness = p.pos,Data.lastColorRGB,Data.lastColorAlpha,Data.lastLineRGB,Data.lastLineThickness
+			local pos,fill,a,outline,thickness = p.pos,Data.lastColorRGB,Data.lastColorAlpha,Data.lastLineRGB,self.Data.lastLineThickness
 			if self.GUI.main_tabs.tabs[1].isselected then
+				d(thickness)
 				local Radius,angle = 8,90
 				local Segments = (function() local seg = ((Radius * 2) * math.pi) / Settings.verticesSpacing if seg <= Settings.maxSegments then return seg else return Settings.maxSegments end end)()
 				Argus.addConeFilled(pos.x, pos.y, pos.z, Radius, math.rad(angle), pos.h, Segments,
 						GUI:ColorConvertFloat4ToU32(fill.r, fill.g, fill.b, a),
 						GUI:ColorConvertFloat4ToU32(outline.r, outline.g, outline.b, outline.a), thickness)
-			elseif self.GUI.main_tabs.tabs[3].isselected then
+			elseif self.GUI.main_tabs.tabs[4].isselected then
 				local Radius = Settings.showHeadingMinRadius
 				local Length = (Radius * 2) + Settings.showHeadingMinFront
 				Argus.addRectFilled(pos.x, pos.y, pos.z, Length, Radius * 2, pos.h,GUI:ColorConvertFloat4ToU32(fill.r,fill.g,fill.b,a),GUI:ColorConvertFloat4ToU32(outline.r,outline.g,outline.b,outline.a),thickness)
@@ -2376,47 +3145,47 @@ function self.Draw()
 		GUI:End()
 		GUI:PopStyleColor()
 	end
-	if (self.GUI.main_tabs.tabs[4].isselected and (posX and posY and winX and winY)) or Settings.DebugLogPopOut then
-		local DebugTypes,DebugTypesEnabled,DebugLog,DebugLogLimit,DebugLog12Hour,DebugLogPopOut,DebugLogPopOutCollapsed,DebugLogPopOutSize,DebugLogPopOutPos = Data.DebugTypes,Settings.DebugTypesEnabled,Data.DebugLog,Settings.DebugLogLimit,Settings.DebugLog12Hour,Settings.DebugLogPopOut,Settings.DebugLogPopOutCollapsed,Settings.DebugLogPopOutSize,Settings.DebugLogPopOutPos
-		GUI:PushStyleVar(GUI.StyleVar_WindowMinSize,(function() if DebugLogPopOut then return 10 else return winX end end)(),(function() if DebugLogPopOut then return 10 else return winY end end)())
-		local c = 0
-		for k,v in pairs(WindowStyle) do if v[4] ~= 0 then c = c + 1 loadstring([[GUI:PushStyleColor(GUI.Col_]]..k..[[, ]]..(v[1]/255)..[[, ]]..(v[2]/255)..[[, ]]..(v[3]/255)..[[, ]]..v[4]..[[)]])() end end
-		if not DebugLogPopOut then
-			GUI:SetNextWindowPos(posX,posY + winY + 2,GUI.SetCond_Always)
-			GUI:SetNextWindowSize(winX,winY,GUI.SetCond_Always)
-		else
-			GUI:SetNextWindowPos(DebugLogPopOutPos.x,DebugLogPopOutPos.y,GUI.SetCond_Appearing)
-			GUI:SetNextWindowSize(DebugLogPopOutSize.x,DebugLogPopOutSize.y,GUI.SetCond_Appearing)
-		end
-		GUI:Begin("Moogle Telegraphs Log",true,(function() if not DebugLogPopOut then
-			return GUI.WindowFlags_NoTitleBar + GUI.WindowFlags_NoResize + GUI.WindowFlags_NoMove + GUI.WindowFlags_NoScrollbar + GUI.WindowFlags_NoScrollWithMouse + GUI.WindowFlags_NoCollapse + GUI.WindowFlags_NoFocusOnAppearing
-		else
-			return GUI.WindowFlags_NoScrollbar
-		end end)())
-		GUI:BeginChild("##Moogle Telegraphs Log",0,0)
-		GUI:PushStyleVar(GUI.StyleVar_FramePadding, Style.framepadding.x, 0)
-		GUI:PushStyleVar(GUI.StyleVar_ItemSpacing, Style.itemspacing.x, 2)
-		local count,height,ScrollY = #DebugLog,GUI:GetTextLineHeightWithSpacing(),GUI:GetScrollY()
-		local start,x,y = ScrollY/height,GUI:GetContentRegionAvail()
-		local bottom = start + (y / height)
-
-		for i=1,count do
-			if (i >= (start - 2)) and (i <= (bottom + 2)) then
-				local line = DebugLog[i]
-				if line.type then
-					GUI:Selectable(line.line,false)
-				end
-			else
-				GUI:NewLine()
-			end
-		end
-
-		GUI:PopStyleVar(2)
-		GUI:EndChild()
-		GUI:End()
-		GUI:PopStyleVar()
-		GUI:PopStyleColor(c)
-	end
+	--if (self.GUI.main_tabs.tabs[5].isselected and (posX and posY and winX and winY)) or Settings.DebugLogPopOut then
+	--	local DebugTypes,DebugTypesEnabled,DebugLog,DebugLogLimit,DebugLog12Hour,DebugLogPopOut,DebugLogPopOutCollapsed,DebugLogPopOutSize,DebugLogPopOutPos = Data.DebugTypes,Settings.DebugTypesEnabled,Data.DebugLog,Settings.DebugLogLimit,Settings.DebugLog12Hour,Settings.DebugLogPopOut,Settings.DebugLogPopOutCollapsed,Settings.DebugLogPopOutSize,Settings.DebugLogPopOutPos
+	--	GUI:PushStyleVar(GUI.StyleVar_WindowMinSize,(function() if DebugLogPopOut then return 10 else return winX end end)(),(function() if DebugLogPopOut then return 10 else return winY end end)())
+	--	local c = 0
+	--	for k,v in pairs(WindowStyle) do if v[4] ~= 0 then c = c + 1 loadstring([[GUI:PushStyleColor(GUI.Col_]]..k..[[, ]]..(v[1]/255)..[[, ]]..(v[2]/255)..[[, ]]..(v[3]/255)..[[, ]]..v[4]..[[)]])() end end
+	--	if not DebugLogPopOut then
+	--		GUI:SetNextWindowPos(posX,posY + winY + 2,GUI.SetCond_Always)
+	--		GUI:SetNextWindowSize(winX,winY,GUI.SetCond_Always)
+	--	else
+	--		GUI:SetNextWindowPos(DebugLogPopOutPos.x,DebugLogPopOutPos.y,GUI.SetCond_Appearing)
+	--		GUI:SetNextWindowSize(DebugLogPopOutSize.x,DebugLogPopOutSize.y,GUI.SetCond_Appearing)
+	--	end
+	--	GUI:Begin("Moogle Telegraphs Log",true,(function() if not DebugLogPopOut then
+	--		return GUI.WindowFlags_NoTitleBar + GUI.WindowFlags_NoResize + GUI.WindowFlags_NoMove + GUI.WindowFlags_NoScrollbar + GUI.WindowFlags_NoScrollWithMouse + GUI.WindowFlags_NoCollapse + GUI.WindowFlags_NoFocusOnAppearing
+	--	else
+	--		return GUI.WindowFlags_NoScrollbar
+	--	end end)())
+	--	GUI:BeginChild("##Moogle Telegraphs Log",0,0)
+	--	GUI:PushStyleVar(GUI.StyleVar_FramePadding, Style.framepadding.x, 0)
+	--	GUI:PushStyleVar(GUI.StyleVar_ItemSpacing, Style.itemspacing.x, 2)
+	--	local count,height,ScrollY = #DebugLog,GUI:GetTextLineHeightWithSpacing(),GUI:GetScrollY()
+	--	local start,x,y = ScrollY/height,GUI:GetContentRegionAvail()
+	--	local bottom = start + (y / height)
+	--
+	--	for i=1,count do
+	--		if (i >= (start - 2)) and (i <= (bottom + 2)) then
+	--			local line = DebugLog[i]
+	--			if line.type then
+	--				GUI:Selectable(line.line,false)
+	--			end
+	--		else
+	--			GUI:NewLine()
+	--		end
+	--	end
+	--
+	--	GUI:PopStyleVar(2)
+	--	GUI:EndChild()
+	--	GUI:End()
+	--	GUI:PopStyleVar()
+	--	GUI:PopStyleColor(c)
+	--end
 end
 
 RegisterEventHandler("Module.Initalize", self.Initialize, selfslong)
