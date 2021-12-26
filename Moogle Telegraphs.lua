@@ -58,9 +58,9 @@ self.Settings = {
 	DebugMarkerToConsole = false,
 
 	DebugTypesEnabled = {
-		[1] = true,
-		[2] = true,
-		[3] = true,
+		[1] = false,
+		[2] = false,
+		[3] = false,
 	},
 	DebugLogLimit = 10000,
 	DebugLog12Hour = true,
