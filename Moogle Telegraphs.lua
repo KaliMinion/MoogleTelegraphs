@@ -14,9 +14,9 @@ local preAllocExtra = {}
 
 self.Info = {
 	Creator = "Kali",
-	Version = "3.6.5",
+	Version = "3.7.2",
 	StartDate = "01/23/2020",
-	LastUpdate = "12/21/2021",
+	LastUpdate = "12/25/2021",
 	ChangeLog = {
 		["1.0.0"] = "Initial release",
 		["1.5.0"] = "Added support for Argus draw functions",
@@ -39,7 +39,8 @@ self.Info = {
 		["3.5.2"] = "Added a few GetStrings for translations and fixed a color preview bug.",
 		["3.5.3"] = "Blacklist",
 		["3.5.4"] = "Recent Draws List",
-		["3.5.5"] = "Sage AoE Heals",
+		["3.6.5"] = "Sage AoE Heals",
+		["3.7.0"] = "Custom angle and radius",
 	}
 }
 
@@ -301,6 +302,9 @@ self.Settings = {
 		[9912] = "Heavensfall",
 	}, -- key = aoeID, value = w/e
 
+	aoeIDUserSetCones = {},
+
+	aoeIDUserSetDonuts = {},
 
 	syncVerticalPosHeight = {
 		near = 0.5,
@@ -1164,7 +1168,7 @@ end
 local save = self.save
 
 function self.Initialize()
-	self.GUI.main_tabs = GUI_CreateTabs("Telegraphs,Blacklist,Recent Draws,Extras,Debug")
+	self.GUI.main_tabs = GUI_CreateTabs("Telegraphs,Custom Angles,Blacklist,Recent Draws,Extras,Debug")
 	local Settings = self.Settings
 	local ModuleTable = self.GUI
 	local MainIcon = ImageFolder .. [[MoogleStuff.png]]
@@ -1401,12 +1405,13 @@ function self.DrawDonut(aoe,extra,radiusInner)
 	local enemyFill,outlineEnemy = ColorGradient(extra,fill)
 	--d("["..aoe.aoeID.."] "..tostring(aoe.aoeName)..", Radius Inner: "..tostring(radiusInner)..", Hit Radius: "..tostring(extra.hitradius))
 	Argus.addDonutFilled(pos.x, pos.y, pos.z, (function()
+		if self.Settings.aoeIDUserSetDonuts[aoe.aoeID] ~= nil then return self.Settings.aoeIDUserSetDonuts[aoe.aoeID].radius else
 		if radiusInner then
 			if radiusInner ~= 0 then return radiusInner
 			elseif extra.hitradius~= 0 then return extra.hitradius + 2
 			else return self.Settings.UnknownDonutRadius end
 		elseif extra.hitradius and extra.hitradius~= 0 then return extra.hitradius
-		else return self.Settings.UnknownDonutRadius end end)(), Radius, Segments,
+		else return self.Settings.UnknownDonutRadius end end end)(), Radius, Segments,
 			extra.friendly and GUI:ColorConvertFloat4ToU32(extra.friendFill.r, extra.friendFill.g, extra.friendFill.b, fill) or
 					GUI:ColorConvertFloat4ToU32(enemyFill.r, enemyFill.g, enemyFill.b, enemyFill.a),
 			extra.friendly and GUI:ColorConvertFloat4ToU32(extra.outlineFriend.r, extra.outlineFriend.g, extra.outlineFriend.b, extra.outlineFriend.a) or
@@ -1567,38 +1572,53 @@ function self.Update()
 										preAllocExtra.outlineThicknessEnemy = outlineThicknessEnemy
 										preAllocExtra.outlineThicknessHealing = outlineThicknessHealing
 										preAllocExtra.outlineThicknessFriend = outlineThicknessFriend
-
+										
 										if Width > 0 or aoeCastType == 11 then
 											if aoeCastType == 11 then -- Cross
 												fillCount = fillCount + 1
 												preAllocExtra.fillCount = fillCount
 												DrawCross( aoe, preAllocExtra )
+												if not self.Data.BlacklistRecorder[aoeID] then
+													self.Data.BlacklistRecorder[aoeID] = {map=Player.localmapid,type="cross"}
+												end
 											else -- Line
 												fillCount = fillCount + 1
 												preAllocExtra.fillCount = fillCount
 												DrawRect( aoe, preAllocExtra )
+												if not self.Data.BlacklistRecorder[aoeID] then
+													self.Data.BlacklistRecorder[aoeID] = {map=Player.localmapid,type="rectangle"}
+												end
 											end
 										else
 											local str = Omen:gsub("o",""):sub(6,-1) or ""
 											local OmenInfo = str:match("%D(%d+)%D") or ""
 											if #OmenInfo == 4 or str:match("don") or str:match("sircle") or aoeCastType == 10 then -- Donut
+												donut = true
 												fillCount = fillCount + 1
 												preAllocExtra.fillCount = fillCount
 												DrawDonut(aoe, preAllocExtra, tonumber(OmenInfo:sub(-2)) or 0 )
+												if not self.Data.BlacklistRecorder[aoeID] then
+													self.Data.BlacklistRecorder[aoeID] = {map=Player.localmapid,type="donut"}
+												end
 											elseif (#OmenInfo == 3 and not aoe.isAreaTarget) or str:match("fan") or is(aoeCastType,{3,13}) then -- Cone
+												local unknownCone = false
 												fillCount = fillCount + 1
 												preAllocExtra.fillCount = fillCount
-												DrawCone(aoe, preAllocExtra, (function() if (tonumber(OmenInfo) or 0) > 0 then return tonumber(OmenInfo) else return UnknownConeAngle end end)() )
+												DrawCone(aoe, preAllocExtra, (function() if (tonumber(OmenInfo) or 0) > 0 then return tonumber(OmenInfo) else if self.Settings.aoeIDUserSetCones[aoeID] ~= nil then return self.Settings.aoeIDUserSetCones[aoeID].angle else unknownCone = true return UnknownConeAngle end end end)() )
+												if not self.Data.BlacklistRecorder[aoeID] then
+													self.Data.BlacklistRecorder[aoeID] = {map=Player.localmapid,type="cone",unknownCone=true}
+												end
 											else
 												fillCount = fillCount + 1
 												preAllocExtra.fillCount = fillCount
 												DrawCircle( aoe, preAllocExtra )
+												if not self.Data.BlacklistRecorder[aoeID] then
+													self.Data.BlacklistRecorder[aoeID] = {map=Player.localmapid,type="circle"}
+												end
 											end
 										end
 
-										if not self.Data.BlacklistRecorder[aoeID] then
-											self.Data.BlacklistRecorder[aoeID] = Player.localmapid
-										end
+										
 									end
 								end
 							else
@@ -2580,55 +2600,171 @@ function self.Draw()
 			--elseif (tabname == GetString("Markers")) then
 			--	Settings.MarkPlayers = GUI:Checkbox(GetString("Mark Players"),Settings.MarkPlayers)
 			--	GUI:Text(GetString("Work In Progress"))
-			
+
+		elseif (tabname == GetString("Custom Angles")) then
+
+			GUI:TextWrapped("Use this to set custom angles & radii for cones and donuts. This info isn't always available to Argus, so Moogle Telegraphs will guess otherwise. Right click on the box to add new IDs, or you can use the Recent Draws list.")
+			local tbl = Settings.aoeIDUserSetCones
+			local tbl2 = Settings.aoeIDUserSetDonuts
+			local sx,sy = GUI:GetWindowSize()
+			local flags = GUI.WindowFlags_NoTitleBar + GUI.WindowFlags_NoResize + GUI.WindowFlags_NoScrollbar + GUI.WindowFlags_NoScrollWithMouse + GUI.WindowFlags_NoCollapse + GUI.WindowFlags_NoSavedSettings
+			GUI:BeginChild("Moogle Telegraphs##Custom Angles",sx-45,(sy-100)/2,true)
+			GUI:Text("Custom Cone Angles")
+			GUI:Separator()
+			if table.valid(tbl) then
+				for k,v in table.pairsbykeys(tbl) do
+					--local contains = (function() if table.contains(tbl, k) then return true else return false end end)()
+					local _,clicked = GUI:Selectable(k.." - "..v.name.." - "..v.angle,false) 
+					if GUI:IsItemClicked(1) then 
+						--tbl[k] = nil
+						--d("removing "..k.." - "..v.name.." - " .. v.angle .. " from the list of custom angle.")
+						Data.newangleid = k
+						Data.newanglelabel = v.name
+						Data.newanglenum = v.angle
+						GUI:OpenPopup("menu1")
+					end
+				end
+			end
+			GUI:EndChild()
+			if GUI:IsItemClicked(1) then
+				GUI:OpenPopup("menu1")
+			end
+			if GUI:BeginPopup("menu1", flags) then
+				if Data.newangleid == nil then Data.newangleid = 0 end
+				if Data.newanglelabel == nil then Data.newanglelabel = "" end
+				if Data.newanglenum == nil then Data.newanglenum = 90 end
+				Data.newangleid = GUI:InputText("aoe ID",Data.newangleid, GUI.InputTextFlags_EnterReturnsTrue + GUI.InputTextFlags_CharsDecimal)
+				Data.newanglelabel = GUI:InputText("label",Data.newanglelabel, GUI.InputTextFlags_EnterReturnsTrue)
+				Data.newanglenum = GUI:InputText("angle",Data.newanglenum, GUI.InputTextFlags_EnterReturnsTrue + GUI.InputTextFlags_CharsDecimal)
+				if GUI:Button(GetString("Add")) then 
+					Settings.aoeIDUserSetCones[tonumber(Data.newangleid)] = {name=Data.newanglelabel,angle=tonumber(Data.newanglenum)}
+					d("Added new angle entry succesfully.")
+					Data.newanglelabel = nil
+					save(true)
+					GUI:CloseCurrentPopup()
+				end
+				if Settings.aoeIDUserSetCones[tonumber(Data.newangleid)] ~= nil then
+					GUI:SameLine()
+					if GUI:Button(GetString("Remove")) then
+						Settings.aoeIDUserSetCones[tonumber(Data.newangleid)] = nil
+						d("removing "..Data.newangleid.." - "..Data.newanglelabel.." - " .. Data.newanglenum .. " from the list of custom angles.")
+						save(true)
+						GUI:CloseCurrentPopup()
+					end
+				end
+				GUI:EndPopup()
+			end
+
+			GUI:BeginChild("Moogle Telegraphs##Custom Radius",sx-45,(sy-100)/2,true)
+			GUI:Text("Custom Donut Radii")
+			GUI:Separator()
+			if table.valid(tbl2) then
+				for k,v in table.pairsbykeys(tbl2) do
+					--local contains = (function() if table.contains(tbl2, k) then return true else return false end end)()
+					local _,clicked = GUI:Selectable(k.." - "..v.name.." - "..v.radius,false) 
+					if GUI:IsItemClicked(1) then 
+						--tbl2[k] = nil
+						--d("removing "..k.." - "..v.name.." - " .. v.radius .. " from the list of custom radii.")
+						Data.newradiusid = k
+						Data.newradiuslabel = v.name
+						Data.newradiusnum = v.radius
+						--GUI:OpenPopup("menu2")
+					end
+				end
+			end
+			GUI:EndChild()
+			if GUI:IsItemClicked(1) then
+				GUI:OpenPopup("menu2")	
+			end
+			if GUI:BeginPopup("menu2", flags) then
+				if Data.newradiusid == nil then Data.newradiusid = 0 end
+				if Data.newradiuslabel == nil then Data.newradiuslabel = "" end
+				if Data.newradiusnum == nil then Data.newradiusnum = 5 end
+				Data.newradiusid = GUI:InputText("aoe ID",Data.newradiusid, GUI.InputTextFlags_EnterReturnsTrue + GUI.InputTextFlags_CharsDecimal)
+				Data.newradiuslabel = GUI:InputText("label",Data.newradiuslabel, GUI.InputTextFlags_EnterReturnsTrue)
+				Data.newradiusnum = GUI:InputText("radius",Data.newradiusnum, GUI.InputTextFlags_EnterReturnsTrue + GUI.InputTextFlags_CharsDecimal)
+				if GUI:Button(GetString("Add")) then 
+					Settings.aoeIDUserSetDonuts[tonumber(Data.newradiusid)] = {name=Data.newradiuslabel,radius=tonumber(Data.newradiusnum)}
+					Data.newradiuslabel = nil
+					d("Added new radius entry succesfully.")
+					save(true)
+					GUI:CloseCurrentPopup()
+				end
+				if Settings.aoeIDUserSetDonuts[tonumber(Data.newradiusid)] ~= nil then
+					GUI:SameLine()
+					if GUI:Button(GetString("Remove")) then
+						Settings.aoeIDUserSetDonuts[tonumber(Data.newradiusid)] = nil
+						d("removing "..Data.newradiusid.." - "..Data.newradiuslabel.." - " .. Data.newradiusnum .. " from the list of custom radiuss.")
+						save(true)
+						GUI:CloseCurrentPopup()
+					end
+				end
+				GUI:EndPopup()
+			end
+
 			elseif (tabname == GetString("Blacklist")) then
 
-				GUI:TextWrapped("Blacklisted AOEs will not have any draws. Right click on the box to add new IDs to the blacklist.")
+				GUI:TextWrapped("Blacklisted AOEs will not have any draws. Right click on the box to add new IDs to the blacklist, or use the Recent Draws list.")
 				local tbl = Settings.aoeIDUserBlacklist
 				local sx,sy = GUI:GetWindowSize()
 				GUI:BeginChild("Moogle Telegraphs##Blacklist",sx-45,sy-100,true)
+				GUI:Text("Blacklisted AOE Draws")
+				GUI:Separator()
 				local flags = GUI.WindowFlags_NoTitleBar + GUI.WindowFlags_NoResize + GUI.WindowFlags_NoScrollbar + GUI.WindowFlags_NoScrollWithMouse + GUI.WindowFlags_NoCollapse + GUI.WindowFlags_NoSavedSettings
-				local selected = false
 				if table.valid(tbl) then
 					for k,v in table.pairsbykeys(tbl) do
 						--local contains = (function() if table.contains(tbl, k) then return true else return false end end)()
 						local _,clicked = GUI:Selectable(k.." - "..v,false) 
 						if GUI:IsItemClicked(1) then 
-							selected = true
-							tbl[k] = nil
-							d("removing "..k.." - "..v.." from the aoe blacklist.")
+							--tbl[k] = nil
+							--d("removing "..k.." - "..v.." from the aoe blacklist.")
+							Data.newblacklistid = k
+							Data.newblacklistlabel = v
 						end
 					end
 				end
 				GUI:EndChild()
-				if GUI:IsItemClicked(1) and not selected then
+				if GUI:IsItemClicked(1) then
 					GUI:OpenPopup("menu1")
 				end
 				if GUI:BeginPopup("menu1", flags) then
-					Data.newblacklistid = GUI:InputText("aoe ID",Data.newblacklistid, GUI.InputTextFlags_EnterReturnsTrue)
+					Data.newblacklistid = GUI:InputText("aoe ID",Data.newblacklistid, GUI.InputTextFlags_EnterReturnsTrue + GUI.InputTextFlags_CharsDecimal)
 					Data.newblacklistlabel = GUI:InputText("label",Data.newblacklistlabel, GUI.InputTextFlags_EnterReturnsTrue)
 					if GUI:Button(GetString("Add")) then 
-						table.insert(Settings.aoeIDUserBlacklist,Data.newblacklistid,Data.newblacklistlabel)
+						--table.insert(Settings.aoeIDUserBlacklist,Data.newblacklistid,Data.newblacklistlabel)
+						Settings.aoeIDUserBlacklist[tonumber(Data.newblacklistid)] = Data.newblacklistlabel
 						d("Added new blacklist entry succesfully.")
 						save(true)
 						GUI:CloseCurrentPopup()
+					end
+					if Settings.aoeIDUserBlacklist[tonumber(Data.newblacklistid)] ~= nil then
+						GUI:SameLine()
+						if GUI:Button(GetString("Remove")) then
+							Settings.aoeIDUserBlacklist[tonumber(Data.newblacklistid)] = nil
+							d("removing "..Data.newblacklistid.." - "..Data.newblacklistlabel.." from the aoe blacklist.")
+							save(true)
+							GUI:CloseCurrentPopup()
+						end
 					end
 					GUI:EndPopup()
 				end
 
 			elseif (tabname == GetString("Recent Draws")) then
 
-				GUI:Columns(4, "##aoelist", true)
+				GUI:Columns(5, "##aoelist", true)
 				GUI:BeginGroup()
 				GUI:Text("ID")GUI:NextColumn()
 				GUI:Text("Name")GUI:NextColumn()
 				GUI:Text("Map")GUI:NextColumn()
 				GUI:Text("Blacklist")GUI:NextColumn()
+				GUI:Text("Type")GUI:NextColumn()
 				GUI:Separator()
 
-				for id, map in pairs(self.Data.BlacklistRecorder) do
+				local addangle = false
+				local addradius = false
+				for id, info in pairs(self.Data.BlacklistRecorder) do
 					local ac = ActionList:Get(1, id)
-					local mapName = GetMapName(map)
+					local mapName = GetMapName(info.map)
 					GUI:Text(id) GUI:NextColumn()
 					GUI:Text(ac.name) GUI:NextColumn()
 					GUI:Text(mapName) GUI:NextColumn()
@@ -2640,6 +2776,74 @@ function self.Draw()
 							save(true)
 						end
 					end GUI:NextColumn()
+
+					if info.type and (info.type ~= "cone" or not info.unknownCone) and info.type ~= "donut" then
+						GUI:Text(info.type)
+					elseif info.type == "cone" then
+						if GUI:Button("Cone - Set custom angle##"..id) then
+							GUI:OpenPopup("addangle")
+							Data.newanglelabel = ac.name
+							Data.newangleid = id
+						end
+					elseif info.type == "donut" then
+						if GUI:Button("Donut - Set custom radius##"..id) then
+							GUI:OpenPopup("addradius")
+							Data.newradiuslabel = ac.name
+							Data.newradiusid = id
+						end
+					end
+					 GUI:NextColumn()
+				end
+
+				local miniflags = GUI.WindowFlags_NoTitleBar + GUI.WindowFlags_NoMove + GUI.WindowFlags_NoScrollbar + GUI.WindowFlags_NoScrollWithMouse + GUI.WindowFlags_NoCollapse + GUI.WindowFlags_NoSavedSettings
+				if GUI:BeginPopup("addangle", miniflags) then
+					
+					if Data.newangleid == nil then Data.newangleid = 0 end
+					Data.newangleid = GUI:InputText("id",Data.newangleid, GUI.InputTextFlags_EnterReturnsTrue + GUI.InputTextFlags_CharsDecimal)
+					if Data.newanglelabel == nil then Data.newanglelabel = "" end
+					Data.newanglelabel = GUI:InputText("label",Data.newanglelabel, GUI.InputTextFlags_EnterReturnsTrue)
+					if Data.newanglenum == nil then Data.newanglenum = "90" end
+					Data.newanglenum = GUI:InputText("angle",Data.newanglenum, GUI.InputTextFlags_EnterReturnsTrue + GUI.InputTextFlags_CharsDecimal)
+
+					if GUI:Button(GetString("Add")) then 
+						local validInput = (type(tonumber(Data.newanglenum) == "number"))
+						if validInput then
+							self.Settings.aoeIDUserSetCones[tonumber(Data.newangleid)] = {name=Data.newanglelabel,angle=tonumber(Data.newanglenum)}
+							Data.newangleid = nil
+							Data.newanglelabel = nil
+							Data.newanglenum = nil
+							save(true)
+							self.Data.BlacklistRecorder[tonumber(Data.newangleid)] = nil
+						end
+						GUI:CloseCurrentPopup()
+					end
+					
+					GUI:EndPopup()
+				end
+
+				if GUI:BeginPopup("addradius", miniflags) then
+					
+					if Data.newradiusid == nil then Data.newradiusid = 0 end
+					Data.newradiusid = GUI:InputText("id",Data.newradiusid, GUI.InputTextFlags_EnterReturnsTrue + GUI.InputTextFlags_CharsDecimal)
+					if Data.newradiuslabel == nil then Data.newradiuslabel = "" end
+					Data.newradiuslabel = GUI:InputText("label",Data.newradiuslabel, GUI.InputTextFlags_EnterReturnsTrue)
+					if Data.newradiusnum == nil then Data.newradiusnum = "5" end
+					Data.newradiusnum = GUI:InputText("radius",Data.newradiusnum, GUI.InputTextFlags_EnterReturnsTrue + GUI.InputTextFlags_CharsDecimal)
+
+					if GUI:Button(GetString("Add")) then 
+						local validInput = (type(tonumber(Data.newradiusnum) == "number"))
+						if validInput then
+							self.Settings.aoeIDUserSetDonuts[tonumber(Data.newradiusid)] = {name=Data.newradiuslabel,radius=tonumber(Data.newradiusnum)}
+							Data.newradiusid = nil
+							Data.newradiuslabel = nil
+							Data.newradiusnum = nil
+							save(true)
+							self.Data.BlacklistRecorder[tonumber(Data.newradiusid)] = nil
+						end
+						GUI:CloseCurrentPopup()
+					end
+					
+					GUI:EndPopup()
 				end
 
 				GUI:EndGroup()
