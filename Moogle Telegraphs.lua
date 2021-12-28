@@ -1573,11 +1573,7 @@ function self.Update()
 										preAllocExtra.outlineThicknessHealing = outlineThicknessHealing
 										preAllocExtra.outlineThicknessFriend = outlineThicknessFriend
 
-										if self.Data.Blacklistorder == nil then 
-											self.Data.Blacklistorder = 1 
-										else
-											self.Data.Blacklistorder = self.Data.Blacklistorder + 1
-										end
+										
 										
 										if Width > 0 or aoeCastType == 11 then
 											if aoeCastType == 11 then -- Cross
@@ -1585,6 +1581,11 @@ function self.Update()
 												preAllocExtra.fillCount = fillCount
 												DrawCross( aoe, preAllocExtra )
 												if not self.Data.BlacklistRecorder[aoeID] then
+													if self.Data.Blacklistorder == nil then 
+														self.Data.Blacklistorder = 1 
+													else
+														self.Data.Blacklistorder = self.Data.Blacklistorder + 1
+													end
 													self.Data.BlacklistRecorder[aoeID] = {map=Player.localmapid,type="cross",pos=self.Data.Blacklistorder}
 												end
 											else -- Line
@@ -1592,6 +1593,11 @@ function self.Update()
 												preAllocExtra.fillCount = fillCount
 												DrawRect( aoe, preAllocExtra )
 												if not self.Data.BlacklistRecorder[aoeID] then
+													if self.Data.Blacklistorder == nil then 
+														self.Data.Blacklistorder = 1 
+													else
+														self.Data.Blacklistorder = self.Data.Blacklistorder + 1
+													end
 													self.Data.BlacklistRecorder[aoeID] = {map=Player.localmapid,type="rectangle",pos=self.Data.Blacklistorder}
 												end
 											end
@@ -1604,6 +1610,11 @@ function self.Update()
 												preAllocExtra.fillCount = fillCount
 												DrawDonut(aoe, preAllocExtra, tonumber(OmenInfo:sub(-2)) or 0 )
 												if not self.Data.BlacklistRecorder[aoeID] then
+													if self.Data.Blacklistorder == nil then 
+														self.Data.Blacklistorder = 1 
+													else
+														self.Data.Blacklistorder = self.Data.Blacklistorder + 1
+													end
 													self.Data.BlacklistRecorder[aoeID] = {map=Player.localmapid,type="donut",pos=self.Data.Blacklistorder}
 												end
 											elseif (#OmenInfo == 3 and not aoe.isAreaTarget) or str:match("fan") or is(aoeCastType,{3,13}) then -- Cone
@@ -1612,6 +1623,11 @@ function self.Update()
 												preAllocExtra.fillCount = fillCount
 												DrawCone(aoe, preAllocExtra, (function() if (tonumber(OmenInfo) or 0) > 0 then return tonumber(OmenInfo) else if self.Settings.aoeIDUserSetCones[aoeID] ~= nil then return self.Settings.aoeIDUserSetCones[aoeID].angle else unknownCone = true return UnknownConeAngle end end end)() )
 												if not self.Data.BlacklistRecorder[aoeID] then
+													if self.Data.Blacklistorder == nil then 
+														self.Data.Blacklistorder = 1 
+													else
+														self.Data.Blacklistorder = self.Data.Blacklistorder + 1
+													end
 													self.Data.BlacklistRecorder[aoeID] = {map=Player.localmapid,type="cone",unknownCone=true,pos=self.Data.Blacklistorder}
 												end
 											else
@@ -1619,6 +1635,11 @@ function self.Update()
 												preAllocExtra.fillCount = fillCount
 												DrawCircle( aoe, preAllocExtra )
 												if not self.Data.BlacklistRecorder[aoeID] then
+													if self.Data.Blacklistorder == nil then 
+														self.Data.Blacklistorder = 1 
+													else
+														self.Data.Blacklistorder = self.Data.Blacklistorder + 1
+													end
 													self.Data.BlacklistRecorder[aoeID] = {map=Player.localmapid,type="circle",pos=self.Data.Blacklistorder}
 												end
 											end
@@ -2786,7 +2807,9 @@ function self.Draw()
 
 				local addangle = false
 				local addradius = false
-				for pos, id in pairs(recentDraws) do
+				d(recentDraws)
+				for i = #recentDraws, 1, -1 do
+					local id = recentDraws[i]
 					local ac = ActionList:Get(1, id)
 					local info = self.Data.BlacklistRecorder[id]
 					local mapName = GetMapName(info.map)
