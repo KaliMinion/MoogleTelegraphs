@@ -14,9 +14,9 @@ local preAllocExtra = {}
 
 self.Info = {
 	Creator = "Kali",
-	Version = "3.7.2",
+	Version = "3.7.3",
 	StartDate = "01/23/2020",
-	LastUpdate = "12/25/2021",
+	LastUpdate = "12/27/2021",
 	ChangeLog = {
 		["1.0.0"] = "Initial release",
 		["1.5.0"] = "Added support for Argus draw functions",
