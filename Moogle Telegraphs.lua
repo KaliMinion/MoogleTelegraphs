@@ -2811,35 +2811,37 @@ function self.Draw()
 					local id = recentDraws[i]
 					local ac = ActionList:Get(1, id)
 					local info = self.Data.BlacklistRecorder[id]
-					local mapName = GetMapName(info.map)
-					GUI:Text(id) GUI:NextColumn()
-					GUI:Text(ac.name) GUI:NextColumn()
-					GUI:Text(mapName) GUI:NextColumn()
+					if table.valid(info) then
+						local mapName = GetMapName(info.map or 0)
+						GUI:Text(id) GUI:NextColumn()
+						GUI:Text(ac.name) GUI:NextColumn()
+						GUI:Text(mapName) GUI:NextColumn()
 
-					if GUI:Button("Blacklist##MBL_blacklistbtn"..id) then
-						if not self.Settings.aoeIDUserBlacklist[id] then
-							self.Data.BlacklistRecorder[id] = nil
-							self.Settings.aoeIDUserBlacklist[id] = ac.name .. " - " .. mapName
-							save(true)
-						end
-					end GUI:NextColumn()
+						if GUI:Button("Blacklist##MBL_blacklistbtn"..id) then
+							if not self.Settings.aoeIDUserBlacklist[id] then
+								self.Data.BlacklistRecorder[id] = nil
+								self.Settings.aoeIDUserBlacklist[id] = ac.name .. " - " .. mapName
+								save(true)
+							end
+						end GUI:NextColumn()
 
-					if info.type and (info.type ~= "cone" or not info.unknownCone) and info.type ~= "donut" then
-						GUI:Text(info.type)
-					elseif info.type == "cone" then
-						if GUI:Button("Cone - Set custom angle##"..id) then
-							GUI:OpenPopup("addangle")
-							Data.newanglelabel = ac.name
-							Data.newangleid = id
+						if info.type and (info.type ~= "cone" or not info.unknownCone) and info.type ~= "donut" then
+							GUI:Text(info.type)
+						elseif info.type == "cone" then
+							if GUI:Button("Cone - Set custom angle##"..id) then
+								GUI:OpenPopup("addangle")
+								Data.newanglelabel = ac.name
+								Data.newangleid = id
+							end
+						elseif info.type == "donut" then
+							if GUI:Button("Donut - Set custom radius##"..id) then
+								GUI:OpenPopup("addradius")
+								Data.newradiuslabel = ac.name
+								Data.newradiusid = id
+							end
 						end
-					elseif info.type == "donut" then
-						if GUI:Button("Donut - Set custom radius##"..id) then
-							GUI:OpenPopup("addradius")
-							Data.newradiuslabel = ac.name
-							Data.newradiusid = id
-						end
+						GUI:NextColumn()
 					end
-					 GUI:NextColumn()
 				end
 
 				local miniflags = GUI.WindowFlags_NoTitleBar + GUI.WindowFlags_NoMove + GUI.WindowFlags_NoScrollbar + GUI.WindowFlags_NoScrollWithMouse + GUI.WindowFlags_NoCollapse + GUI.WindowFlags_NoSavedSettings
