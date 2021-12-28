@@ -2807,7 +2807,6 @@ function self.Draw()
 
 				local addangle = false
 				local addradius = false
-				d(recentDraws)
 				for i = #recentDraws, 1, -1 do
 					local id = recentDraws[i]
 					local ac = ActionList:Get(1, id)
