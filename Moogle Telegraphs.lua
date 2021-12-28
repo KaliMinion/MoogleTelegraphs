@@ -1572,6 +1572,12 @@ function self.Update()
 										preAllocExtra.outlineThicknessEnemy = outlineThicknessEnemy
 										preAllocExtra.outlineThicknessHealing = outlineThicknessHealing
 										preAllocExtra.outlineThicknessFriend = outlineThicknessFriend
+
+										if self.Data.Blacklistorder == nil then 
+											self.Data.Blacklistorder = 1 
+										else
+											self.Data.Blacklistorder = self.Data.Blacklistorder + 1
+										end
 										
 										if Width > 0 or aoeCastType == 11 then
 											if aoeCastType == 11 then -- Cross
@@ -1579,14 +1585,14 @@ function self.Update()
 												preAllocExtra.fillCount = fillCount
 												DrawCross( aoe, preAllocExtra )
 												if not self.Data.BlacklistRecorder[aoeID] then
-													self.Data.BlacklistRecorder[aoeID] = {map=Player.localmapid,type="cross"}
+													self.Data.BlacklistRecorder[aoeID] = {map=Player.localmapid,type="cross",pos=self.Data.Blacklistorder}
 												end
 											else -- Line
 												fillCount = fillCount + 1
 												preAllocExtra.fillCount = fillCount
 												DrawRect( aoe, preAllocExtra )
 												if not self.Data.BlacklistRecorder[aoeID] then
-													self.Data.BlacklistRecorder[aoeID] = {map=Player.localmapid,type="rectangle"}
+													self.Data.BlacklistRecorder[aoeID] = {map=Player.localmapid,type="rectangle",pos=self.Data.Blacklistorder}
 												end
 											end
 										else
@@ -1598,7 +1604,7 @@ function self.Update()
 												preAllocExtra.fillCount = fillCount
 												DrawDonut(aoe, preAllocExtra, tonumber(OmenInfo:sub(-2)) or 0 )
 												if not self.Data.BlacklistRecorder[aoeID] then
-													self.Data.BlacklistRecorder[aoeID] = {map=Player.localmapid,type="donut"}
+													self.Data.BlacklistRecorder[aoeID] = {map=Player.localmapid,type="donut",pos=self.Data.Blacklistorder}
 												end
 											elseif (#OmenInfo == 3 and not aoe.isAreaTarget) or str:match("fan") or is(aoeCastType,{3,13}) then -- Cone
 												local unknownCone = false
@@ -1606,14 +1612,14 @@ function self.Update()
 												preAllocExtra.fillCount = fillCount
 												DrawCone(aoe, preAllocExtra, (function() if (tonumber(OmenInfo) or 0) > 0 then return tonumber(OmenInfo) else if self.Settings.aoeIDUserSetCones[aoeID] ~= nil then return self.Settings.aoeIDUserSetCones[aoeID].angle else unknownCone = true return UnknownConeAngle end end end)() )
 												if not self.Data.BlacklistRecorder[aoeID] then
-													self.Data.BlacklistRecorder[aoeID] = {map=Player.localmapid,type="cone",unknownCone=true}
+													self.Data.BlacklistRecorder[aoeID] = {map=Player.localmapid,type="cone",unknownCone=true,pos=self.Data.Blacklistorder}
 												end
 											else
 												fillCount = fillCount + 1
 												preAllocExtra.fillCount = fillCount
 												DrawCircle( aoe, preAllocExtra )
 												if not self.Data.BlacklistRecorder[aoeID] then
-													self.Data.BlacklistRecorder[aoeID] = {map=Player.localmapid,type="circle"}
+													self.Data.BlacklistRecorder[aoeID] = {map=Player.localmapid,type="circle",pos=self.Data.Blacklistorder}
 												end
 											end
 										end
@@ -2636,7 +2642,11 @@ function self.Draw()
 				Data.newangleid = GUI:InputText("aoe ID",Data.newangleid, GUI.InputTextFlags_EnterReturnsTrue + GUI.InputTextFlags_CharsDecimal)
 				Data.newanglelabel = GUI:InputText("label",Data.newanglelabel, GUI.InputTextFlags_EnterReturnsTrue)
 				Data.newanglenum = GUI:InputText("angle",Data.newanglenum, GUI.InputTextFlags_EnterReturnsTrue + GUI.InputTextFlags_CharsDecimal)
-				if GUI:Button(GetString("Add")) then 
+				local str = "Add"
+				if Settings.aoeIDUserSetCones[tonumber(Data.newangleid)] ~= nil then
+					str = "Save"
+				end
+				if GUI:Button(GetString(str)) then 
 					Settings.aoeIDUserSetCones[tonumber(Data.newangleid)] = {name=Data.newanglelabel,angle=tonumber(Data.newanglenum)}
 					d("Added new angle entry succesfully.")
 					Data.newanglelabel = nil
@@ -2683,7 +2693,11 @@ function self.Draw()
 				Data.newradiusid = GUI:InputText("aoe ID",Data.newradiusid, GUI.InputTextFlags_EnterReturnsTrue + GUI.InputTextFlags_CharsDecimal)
 				Data.newradiuslabel = GUI:InputText("label",Data.newradiuslabel, GUI.InputTextFlags_EnterReturnsTrue)
 				Data.newradiusnum = GUI:InputText("radius",Data.newradiusnum, GUI.InputTextFlags_EnterReturnsTrue + GUI.InputTextFlags_CharsDecimal)
-				if GUI:Button(GetString("Add")) then 
+				local str = "Add"
+				if Settings.aoeIDUserSetCones[tonumber(Data.newangleid)] ~= nil then
+					str = "Save"
+				end
+				if GUI:Button(GetString(str)) then 
 					Settings.aoeIDUserSetDonuts[tonumber(Data.newradiusid)] = {name=Data.newradiuslabel,radius=tonumber(Data.newradiusnum)}
 					Data.newradiuslabel = nil
 					d("Added new radius entry succesfully.")
@@ -2751,6 +2765,16 @@ function self.Draw()
 
 			elseif (tabname == GetString("Recent Draws")) then
 
+				if GUI:Button("Clear List") then
+					table.clear(self.Data.BlacklistRecorder)
+					self.Data.Blacklistorder = nil
+				end
+				GUI:Separator()
+				local recentDraws = {}
+				for id, info in pairs(self.Data.BlacklistRecorder) do
+					recentDraws[info.pos] = id
+				end
+
 				GUI:Columns(5, "##aoelist", true)
 				GUI:BeginGroup()
 				GUI:Text("ID")GUI:NextColumn()
@@ -2762,8 +2786,9 @@ function self.Draw()
 
 				local addangle = false
 				local addradius = false
-				for id, info in pairs(self.Data.BlacklistRecorder) do
+				for pos, id in pairs(recentDraws) do
 					local ac = ActionList:Get(1, id)
+					local info = self.Data.BlacklistRecorder[id]
 					local mapName = GetMapName(info.map)
 					GUI:Text(id) GUI:NextColumn()
 					GUI:Text(ac.name) GUI:NextColumn()
@@ -2809,11 +2834,11 @@ function self.Draw()
 						local validInput = (type(tonumber(Data.newanglenum) == "number"))
 						if validInput then
 							self.Settings.aoeIDUserSetCones[tonumber(Data.newangleid)] = {name=Data.newanglelabel,angle=tonumber(Data.newanglenum)}
+							self.Data.BlacklistRecorder[tonumber(Data.newangleid)] = nil
 							Data.newangleid = nil
 							Data.newanglelabel = nil
 							Data.newanglenum = nil
 							save(true)
-							self.Data.BlacklistRecorder[tonumber(Data.newangleid)] = nil
 						end
 						GUI:CloseCurrentPopup()
 					end
@@ -2834,11 +2859,11 @@ function self.Draw()
 						local validInput = (type(tonumber(Data.newradiusnum) == "number"))
 						if validInput then
 							self.Settings.aoeIDUserSetDonuts[tonumber(Data.newradiusid)] = {name=Data.newradiuslabel,radius=tonumber(Data.newradiusnum)}
+							self.Data.BlacklistRecorder[tonumber(Data.newradiusid)] = nil
 							Data.newradiusid = nil
 							Data.newradiuslabel = nil
 							Data.newradiusnum = nil
 							save(true)
-							self.Data.BlacklistRecorder[tonumber(Data.newradiusid)] = nil
 						end
 						GUI:CloseCurrentPopup()
 					end
