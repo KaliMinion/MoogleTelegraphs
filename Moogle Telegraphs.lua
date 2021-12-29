@@ -14,7 +14,7 @@ local preAllocExtra = {}
 
 self.Info = {
 	Creator = "Kali",
-	Version = "3.7.3",
+	Version = "3.7.4",
 	StartDate = "01/23/2020",
 	LastUpdate = "12/27/2021",
 	ChangeLog = {
@@ -2816,7 +2816,7 @@ function self.Draw()
 						GUI:Text(id) GUI:NextColumn()
 						GUI:Text(ac.name) GUI:NextColumn()
 						GUI:Text(mapName) GUI:NextColumn()
-						
+
 
 						if GUI:Button("Blacklist##MBL_blacklistbtn"..id) then
 							if not self.Settings.aoeIDUserBlacklist[id] then
