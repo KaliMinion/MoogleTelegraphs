@@ -2809,13 +2809,14 @@ function self.Draw()
 				local addradius = false
 				for i = #recentDraws, 1, -1 do
 					local id = recentDraws[i]
-					if table.valid(self.Data.BlacklistRecorder[id]) and not self.Settings.aoeIDUserSetCones[id] and not self.Settings.aoeIDUserSetDonuts[id] then
+					if table.valid(self.Data.BlacklistRecorder[id]) and not self.Settings.aoeIDUserSetCones[id] and not self.Settings.aoeIDUserSetDonuts[id] then 
 						local ac = ActionList:Get(1, id)
 						local info = self.Data.BlacklistRecorder[id]
 						local mapName = GetMapName(info.map)
 						GUI:Text(id) GUI:NextColumn()
 						GUI:Text(ac.name) GUI:NextColumn()
 						GUI:Text(mapName) GUI:NextColumn()
+						
 
 						if GUI:Button("Blacklist##MBL_blacklistbtn"..id) then
 							if not self.Settings.aoeIDUserBlacklist[id] then
