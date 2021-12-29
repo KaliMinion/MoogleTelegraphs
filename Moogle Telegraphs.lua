@@ -198,6 +198,7 @@ self.Settings = {
 	AttackRangeOverrides = {
 		[FFXIV.JOBS.GUNBREAKER] = {3},
 		[FFXIV.JOBS.DANCER] = {5, 15, 25}
+		[FFXIV.JOBS.SAGE] = {6, 25}
 	},
 	AlwaysShowAttackRange = false,
 	AlwaysShowMeleeRange = false,
@@ -966,7 +967,12 @@ self.Data = {
 		[32] = "Dark Knight",
 		[33] = "Astrologian",
 		[34] = "Samurai",
-		[35] = "Red Mage"
+		[35] = "Red Mage",
+		[36] = "Blue Mage",
+		[37] = "Gunbreaker",
+		[38] = "Dancer",
+		[39] = "Reaper",
+		[40] = "Sage",
 	},
 	CurrentParty = {},
 	lastPartyCheck = 0,
