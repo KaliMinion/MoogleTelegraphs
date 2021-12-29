@@ -2809,44 +2809,46 @@ function self.Draw()
 				local addradius = false
 				for i = #recentDraws, 1, -1 do
 					local id = recentDraws[i]
-					local ac = ActionList:Get(1, id)
-					local info = self.Data.BlacklistRecorder[id]
-					local mapName = GetMapName(info.map)
-					GUI:Text(id) GUI:NextColumn()
-					GUI:Text(ac.name) GUI:NextColumn()
-					GUI:Text(mapName) GUI:NextColumn()
+					if table.valid(self.Data.BlacklistRecorder[id]) and not self.Settings.aoeIDUserSetCones[id] and not self.Settings.aoeIDUserSetDonuts[id] then
+						local ac = ActionList:Get(1, id)
+						local info = self.Data.BlacklistRecorder[id]
+						local mapName = GetMapName(info.map)
+						GUI:Text(id) GUI:NextColumn()
+						GUI:Text(ac.name) GUI:NextColumn()
+						GUI:Text(mapName) GUI:NextColumn()
 
-					if GUI:Button("Blacklist##MBL_blacklistbtn"..id) then
-						if not self.Settings.aoeIDUserBlacklist[id] then
-							self.Data.BlacklistRecorder[id] = nil
-							self.Settings.aoeIDUserBlacklist[id] = ac.name .. " - " .. mapName
-							save(true)
-						end
-					end GUI:NextColumn()
+						if GUI:Button("Blacklist##MBL_blacklistbtn"..id) then
+							if not self.Settings.aoeIDUserBlacklist[id] then
+								self.Data.BlacklistRecorder[id] = nil
+								self.Settings.aoeIDUserBlacklist[id] = ac.name .. " - " .. mapName
+								save(true)
+							end
+						end GUI:NextColumn()
 
-					if info.type and (info.type ~= "cone" or not info.unknownCone) and info.type ~= "donut" then
-						GUI:Text(info.type)
-					elseif info.type == "cone" then
-						if GUI:Button("Cone - Set custom angle##"..id) then
-							GUI:OpenPopup("addangle")
-							Data.newanglelabel = ac.name
-							Data.newangleid = id
+						if info.type and (info.type ~= "cone" or not info.unknownCone) and info.type ~= "donut" then
+							GUI:Text(info.type)
+						elseif info.type == "cone" then
+							if GUI:Button("Cone - Set custom angle##"..id) then
+								GUI:OpenPopup("addangle")
+								Data.newanglelabel = ac.name
+								Data.newangleid = id
+							end
+						elseif info.type == "donut" then
+							if GUI:Button("Donut - Set custom radius##"..id) then
+								GUI:OpenPopup("addradius")
+								Data.newradiuslabel = ac.name
+								Data.newradiusid = id
+							end
 						end
-					elseif info.type == "donut" then
-						if GUI:Button("Donut - Set custom radius##"..id) then
-							GUI:OpenPopup("addradius")
-							Data.newradiuslabel = ac.name
-							Data.newradiusid = id
-						end
+						GUI:NextColumn()
 					end
-					 GUI:NextColumn()
 				end
 
 				local miniflags = GUI.WindowFlags_NoTitleBar + GUI.WindowFlags_NoMove + GUI.WindowFlags_NoScrollbar + GUI.WindowFlags_NoScrollWithMouse + GUI.WindowFlags_NoCollapse + GUI.WindowFlags_NoSavedSettings
 				if GUI:BeginPopup("addangle", miniflags) then
 					
 					if Data.newangleid == nil then Data.newangleid = 0 end
-					Data.newangleid = GUI:InputText("id",Data.newangleid, GUI.InputTextFlags_EnterReturnsTrue + GUI.InputTextFlags_CharsDecimal)
+					--Data.newangleid = GUI:InputText("id",Data.newangleid, GUI.InputTextFlags_EnterReturnsTrue + GUI.InputTextFlags_CharsDecimal)
 					if Data.newanglelabel == nil then Data.newanglelabel = "" end
 					Data.newanglelabel = GUI:InputText("label",Data.newanglelabel, GUI.InputTextFlags_EnterReturnsTrue)
 					if Data.newanglenum == nil then Data.newanglenum = "90" end
@@ -2856,7 +2858,7 @@ function self.Draw()
 						local validInput = (type(tonumber(Data.newanglenum) == "number"))
 						if validInput then
 							self.Settings.aoeIDUserSetCones[tonumber(Data.newangleid)] = {name=Data.newanglelabel,angle=tonumber(Data.newanglenum)}
-							self.Data.BlacklistRecorder[tonumber(Data.newangleid)] = nil
+							--self.Data.BlacklistRecorder[tonumber(Data.newangleid)] = nil
 							Data.newangleid = nil
 							Data.newanglelabel = nil
 							Data.newanglenum = nil
@@ -2871,7 +2873,7 @@ function self.Draw()
 				if GUI:BeginPopup("addradius", miniflags) then
 					
 					if Data.newradiusid == nil then Data.newradiusid = 0 end
-					Data.newradiusid = GUI:InputText("id",Data.newradiusid, GUI.InputTextFlags_EnterReturnsTrue + GUI.InputTextFlags_CharsDecimal)
+					--Data.newradiusid = GUI:InputText("id",Data.newradiusid, GUI.InputTextFlags_EnterReturnsTrue + GUI.InputTextFlags_CharsDecimal)
 					if Data.newradiuslabel == nil then Data.newradiuslabel = "" end
 					Data.newradiuslabel = GUI:InputText("label",Data.newradiuslabel, GUI.InputTextFlags_EnterReturnsTrue)
 					if Data.newradiusnum == nil then Data.newradiusnum = "5" end
@@ -2881,7 +2883,7 @@ function self.Draw()
 						local validInput = (type(tonumber(Data.newradiusnum) == "number"))
 						if validInput then
 							self.Settings.aoeIDUserSetDonuts[tonumber(Data.newradiusid)] = {name=Data.newradiuslabel,radius=tonumber(Data.newradiusnum)}
-							self.Data.BlacklistRecorder[tonumber(Data.newradiusid)] = nil
+							--self.Data.BlacklistRecorder[tonumber(Data.newradiusid)] = nil
 							Data.newradiusid = nil
 							Data.newradiuslabel = nil
 							Data.newradiusnum = nil
