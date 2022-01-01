@@ -197,7 +197,7 @@ self.Settings = {
 	DrawAttackRange = true,
 	AttackRangeOverrides = {
 		[FFXIV.JOBS.GUNBREAKER] = {3},
-		[FFXIV.JOBS.DANCER] = {5, 15, 25}
+		[FFXIV.JOBS.DANCER] = {5, 15, 25},
 		[FFXIV.JOBS.SAGE] = {6, 25}
 	},
 	AlwaysShowAttackRange = false,
@@ -1475,7 +1475,7 @@ function self.Update()
 	local Data,Settings,Override = self.Data,self.Settings,self.Override
 	if Data.loaded then
 		if Settings.enable then
-			local p,aoes = Player, { Ground = Argus.getCurrentGroundAOEs(true), Directional = Argus.getCurrentDirectionalAOEs(true) }
+			local p,aoes = TensorCore.mGetPlayer(), { Ground = Argus.getCurrentGroundAOEs(true), Directional = Argus.getCurrentDirectionalAOEs(true) }
 			local DrawHealing,DrawFriendly,DrawLB = Settings.DrawHealingAoE,Settings.DrawFriendlyAoE,Settings.DrawFriendlyLB
 			local alphafill,fillRGB,largeAoE,maxSegments,outlineRGB,outlineThickness,UnknownConeAngle,UnknownDonutRadius = Settings.alphafill,Settings.fillRGB,Settings.largeAoE,Settings.maxSegments,Settings.outlineRGB,Settings.outlineThickness,Settings.UnknownConeAngle,Settings.UnknownDonutRadius
 			local smallEnemy,largeEnemy,smallHealing,largeHealing,smallFriend,largeFriend,enemyFill,healingFill,friendFill,outlineEnemy,outlineHealing,outlineFriend,outlineThicknessEnemy,outlineThicknessHealing,outlineThicknessFriend = alphafill.enemy.small,alphafill.enemy.large,alphafill.healing.small,alphafill.healing.large,alphafill.friend.small,alphafill.friend.large,fillRGB.enemy,fillRGB.healing,fillRGB.friend,outlineRGB.enemy,outlineRGB.healing,outlineRGB.friend,outlineThickness.enemy,outlineThickness.healing,outlineThickness.friend
@@ -1592,7 +1592,7 @@ function self.Update()
 													else
 														self.Data.Blacklistorder = self.Data.Blacklistorder + 1
 													end
-													self.Data.BlacklistRecorder[aoeID] = {map=Player.localmapid,type="cross",pos=self.Data.Blacklistorder}
+													self.Data.BlacklistRecorder[aoeID] = {map=TensorCore.mGetPlayer().localmapid,type="cross",pos=self.Data.Blacklistorder}
 												end
 											else -- Line
 												fillCount = fillCount + 1
@@ -1604,7 +1604,7 @@ function self.Update()
 													else
 														self.Data.Blacklistorder = self.Data.Blacklistorder + 1
 													end
-													self.Data.BlacklistRecorder[aoeID] = {map=Player.localmapid,type="rectangle",pos=self.Data.Blacklistorder}
+													self.Data.BlacklistRecorder[aoeID] = {map=TensorCore.mGetPlayer().localmapid,type="rectangle",pos=self.Data.Blacklistorder}
 												end
 											end
 										else
@@ -1621,7 +1621,7 @@ function self.Update()
 													else
 														self.Data.Blacklistorder = self.Data.Blacklistorder + 1
 													end
-													self.Data.BlacklistRecorder[aoeID] = {map=Player.localmapid,type="donut",pos=self.Data.Blacklistorder}
+													self.Data.BlacklistRecorder[aoeID] = {map=TensorCore.mGetPlayer().localmapid,type="donut",pos=self.Data.Blacklistorder}
 												end
 											elseif (#OmenInfo == 3 and not aoe.isAreaTarget) or str:match("fan") or is(aoeCastType,{3,13}) then -- Cone
 												local unknownCone = false
@@ -1634,7 +1634,7 @@ function self.Update()
 													else
 														self.Data.Blacklistorder = self.Data.Blacklistorder + 1
 													end
-													self.Data.BlacklistRecorder[aoeID] = {map=Player.localmapid,type="cone",unknownCone=true,pos=self.Data.Blacklistorder}
+													self.Data.BlacklistRecorder[aoeID] = {map=TensorCore.mGetPlayer().localmapid,type="cone",unknownCone=true,pos=self.Data.Blacklistorder}
 												end
 											else
 												fillCount = fillCount + 1
@@ -1646,7 +1646,7 @@ function self.Update()
 													else
 														self.Data.Blacklistorder = self.Data.Blacklistorder + 1
 													end
-													self.Data.BlacklistRecorder[aoeID] = {map=Player.localmapid,type="circle",pos=self.Data.Blacklistorder}
+													self.Data.BlacklistRecorder[aoeID] = {map=TensorCore.mGetPlayer().localmapid,type="circle",pos=self.Data.Blacklistorder}
 												end
 											end
 										end
@@ -1823,7 +1823,7 @@ Argus.registerOnMarkerAdd(function(entityID, markerType) --d("["..tostring(entit
 	end
 end)
 
-local function unpack(tbl)
+function self.unpack(tbl)
 	local str = ""
 	for i=1,#tbl do
 		str = str..tbl[i]
@@ -1832,7 +1832,7 @@ local function unpack(tbl)
 	return str
 end
 
-local function avoidanceCallback(aoe)
+function self.avoidanceCallback(aoe)
 	if aoe == nil then return false end
 	local ent = EntityList:Get(aoe.entityID)
 	if ent then
@@ -1944,7 +1944,7 @@ function self.ColorEditor(id,r,g,b,a)
 end
 
 function self.Draw()
-	local p,Gui,Settings,Data,Style = Player,self.GUI,self.Settings,self.Data,GUI:GetStyle()
+	local p,Gui,Settings,Data,Style = TensorCore.mGetPlayer(),self.GUI,self.Settings,self.Data,GUI:GetStyle()
 	local windowPadding = Style.windowpadding
 	local winX,winY,posX,posY
 	if self.GUI.open then
@@ -2276,7 +2276,7 @@ function self.Draw()
 
 					GUI:PushItemWidth(-1)
 					GUI:AlignFirstTextHeightToWidgets()
-					if not StringTableCache["Healing Actions"] then StringTableCache["Healing Actions"] = unpack(Settings.HealingAoeActions) end
+					if not StringTableCache["Healing Actions"] then StringTableCache["Healing Actions"] = self.unpack(Settings.HealingAoeActions) end
 					GUI:Text(GetString("Healing").." "..GetString("Actions")..": ")
 					GUI:SameLine(0,0)
 					local val,changed = GUI:InputText("##HealingActions",StringTableCache["Healing Actions"])
@@ -3235,21 +3235,21 @@ function self.Draw()
 				local combatOnly,instanceOnly = Settings.DrawDotCombatOnly,Settings.DrawDotInstanceOnly
 				if (not combatOnly or p.incombat) and (not instanceOnly or InInstance()) then
 					local colorFill = Settings.DotDotU32
-					if TensorCore.Avoidance.inAnyAOE(Argus.getCurrentDirectionalAOEs(true), p.pos, avoidanceCallback) or TensorCore.Avoidance.inAnyAOE(Argus.getCurrentGroundAOEs(true), p.pos, avoidanceCallback) then
+					if TensorCore.Avoidance.inAnyAOE(Argus.getCurrentDirectionalAOEs(true), p.pos, self.avoidanceCallback) or TensorCore.Avoidance.inAnyAOE(Argus.getCurrentGroundAOEs(true), p.pos, self.avoidanceCallback) then
 						colorFill = GUI:ColorConvertFloat4ToU32(3/255, 169/255, 244/255, 1)
 					end
 					local DotSize = Settings.DotSize
 					--GUI:AddCircleFilled(x,y,DotSize,colorFill)
-					local pos = Player.pos
+					local pos = TensorCore.mGetPlayer().pos
 					Argus.addCircleFilled (pos.x, pos.y, pos.z, DotSize*0.005, 20, colorFill)
 				end
 			else
-				local player = RenderManager:WorldToScreen(Player.pos)
+				local player = RenderManager:WorldToScreen(TensorCore.mGetPlayer().pos)
 				if valid(player) then
 					local combatOnly,instanceOnly = Settings.DrawDotCombatOnly,Settings.DrawDotInstanceOnly
 					if (not combatOnly or p.incombat) and (not instanceOnly or InInstance()) then
 						local colorFill = Settings.DotDotU32
-						if TensorCore.Avoidance.inAnyAOE(Argus.getCurrentDirectionalAOEs(true), p.pos, avoidanceCallback) or TensorCore.Avoidance.inAnyAOE(Argus.getCurrentGroundAOEs(true), p.pos, avoidanceCallback) then
+						if TensorCore.Avoidance.inAnyAOE(Argus.getCurrentDirectionalAOEs(true), p.pos, self.avoidanceCallback) or TensorCore.Avoidance.inAnyAOE(Argus.getCurrentGroundAOEs(true), p.pos, self.avoidanceCallback) then
 							colorFill = GUI:ColorConvertFloat4ToU32(3/255, 169/255, 244/255, 1)
 						end
 						local DotSize = Settings.DotSize
@@ -3298,7 +3298,7 @@ function self.Draw()
 			end
 		end
 		if Settings.DrawAttackRange then
-			local target = MGetTarget()
+			local target = TensorCore.mGetTarget()
 			if valid(target) and target.attackable then
 				local AttackRange,MeleeRange = ml_global_information.AttackRange + 1,3
 				local IsPvP = IsPVPMap(Player.localmapid)
@@ -3309,8 +3309,8 @@ function self.Draw()
 				end
 				local maxRanges,dist,outlineRGB = {AttackRange},Distance3D(p,target),Settings.outlineRGB
 				local jobOverrides = Settings.AttackRangeOverrides
-				if jobOverrides[Player.job] ~= nil then
-					maxRanges = jobOverrides[Player.job]
+				if jobOverrides[TensorCore.mGetPlayer().job] ~= nil then
+					maxRanges = jobOverrides[TensorCore.mGetPlayer().job]
 				end
 				if Settings.AlwaysShowMeleeRange and not table.find(maxRanges,MeleeRange) then table.insert(maxRanges,MeleeRange) end
 				if not IsPvP then
@@ -3341,21 +3341,21 @@ function self.Draw()
 				end
 			end
 			if Settings.DrawTrueNorth then
-				local target = MGetTarget()
+				local target = TensorCore.mGetTarget()
 				if valid(target) and target.attackable then
-					local pos,length = target.pos,4 + target.hitradius + Player.hitradius
+					local pos,length = target.pos,4 + target.hitradius + TensorCore.mGetPlayer().hitradius
 					local TrueNorthRGB = Settings.TrueNorthRGB
 					Argus.addRectFilled(pos.x, pos.y, pos.z, length, 0, math.pi, GUI:ColorConvertFloat4ToU32(TrueNorthRGB.r,TrueNorthRGB.g,TrueNorthRGB.b,TrueNorthRGB.a))
 				end
 			end
 			local DrawCardinal,DrawIntercardinal,DrawRear = Settings.DrawCardinal,Settings.DrawIntercardinal,Settings.DrawRear
 			if DrawCardinal or DrawIntercardinal or DrawRear then
-				local target = MGetTarget()
+				local target = TensorCore.mGetTarget()
 				if valid(target) and target.attackable then
-					local pos,length = target.pos,3 + target.hitradius + Player.hitradius
+					local pos,length = target.pos,3 + target.hitradius + TensorCore.mGetPlayer().hitradius
 					local CardinalRGB,IntercardinalRGB = Settings.CardinalRGB,Settings.IntercardinalRGB
 					if Settings.ExtendLines then
-						local len = Distance2D(Player.pos,pos,true)
+						local len = Distance2D(TensorCore.mGetPlayer().pos,pos,true)
 						if len > length then length = len end
 					end
 					local pos1 = GetPosFromDistanceHeading(pos, length, pos.h)
