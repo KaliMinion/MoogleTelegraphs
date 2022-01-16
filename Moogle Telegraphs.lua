@@ -14,7 +14,7 @@ local preAllocExtra = {}
 
 self.Info = {
 	Creator = "Kali",
-	Version = "3.7.4",
+	Version = "3.7.5",
 	StartDate = "01/23/2020",
 	LastUpdate = "12/27/2021",
 	ChangeLog = {
@@ -41,6 +41,10 @@ self.Info = {
 		["3.5.4"] = "Recent Draws List",
 		["3.6.5"] = "Sage AoE Heals",
 		["3.7.0"] = "Custom angle and radius",
+		["3.7.2"] = "Custom Angle bug fix",
+		["3.7.3"] = "Recent Draws: Sort by most recent, Clear button, Debug fix",
+		["3.7.4"] = "Recent Draws no longer show draws already added",
+		["3.7.5"] = "Added copy/import blacklist, as well as store version."
 	}
 }
 
@@ -2786,6 +2790,33 @@ function self.Draw()
 							save(true)
 							GUI:CloseCurrentPopup()
 						end
+					end
+					if GUI:Button(GetString("Copy Blacklist")) then
+						GUI:SetClipboardText(tostring(Settings.aoeIDUserBlacklist):gsub(".*\{","local TelegraphBL = \{").."return TelegraphBL")
+						d("[Moogle Telegraphs] Blacklist copied to clipboard.")
+						GUI:CloseCurrentPopup()
+					end
+					GUI:SameLine()
+					if GUI:Button(GetString("Import Blacklist (Merge)")) then
+						local clipboard = loadstring(GUI:GetClipboardText() or "")()
+						if table.valid(clipboard) then
+							for k,v in pairs(clipboard) do
+								if not Settings.aoeIDUserBlacklist[k] then
+									if type(k) == "number" and type(v) == "string" then
+										Settings.aoeIDUserBlacklist[k] = v
+									else
+										ml_error("[Moogle Telegraphs] Clipboard key/value is not valid.")
+										GUI:CloseCurrentPopup()
+										break
+									end
+								end
+							end
+							d("[Moogle Telegraphs] Imported and merged Blacklist table.")
+							save()
+						else
+							ml_error("Clipboard is not a valid table")
+						end
+						GUI:CloseCurrentPopup()
 					end
 					GUI:EndPopup()
 				end
