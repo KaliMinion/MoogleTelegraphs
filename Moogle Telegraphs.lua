@@ -14,7 +14,7 @@ local preAllocExtra = {}
 
 self.Info = {
 	Creator = "Kali",
-	Version = "3.7.5",
+	Version = "3.8.0",
 	StartDate = "01/23/2020",
 	LastUpdate = "12/27/2021",
 	ChangeLog = {
@@ -44,7 +44,8 @@ self.Info = {
 		["3.7.2"] = "Custom Angle bug fix",
 		["3.7.3"] = "Recent Draws: Sort by most recent, Clear button, Debug fix",
 		["3.7.4"] = "Recent Draws no longer show draws already added",
-		["3.7.5"] = "Added copy/import blacklist, as well as store version."
+		["3.7.5"] = "Added copy/import blacklist, as well as store version.",
+		["3.8.0"] = "GUI revamps"
 	}
 }
 
@@ -1596,7 +1597,8 @@ function self.Update()
 													else
 														self.Data.Blacklistorder = self.Data.Blacklistorder + 1
 													end
-													self.Data.BlacklistRecorder[aoeID] = {map=TensorCore.mGetPlayer().localmapid,type="cross",pos=self.Data.Blacklistorder}
+													local timer = math.round(TensorReactions_CurrentTimer,3) or 0
+													self.Data.BlacklistRecorder[aoeID] = {map=TensorCore.mGetPlayer().localmapid,timer=timer,type="cross",pos=self.Data.Blacklistorder}
 												end
 											else -- Line
 												fillCount = fillCount + 1
@@ -1608,7 +1610,8 @@ function self.Update()
 													else
 														self.Data.Blacklistorder = self.Data.Blacklistorder + 1
 													end
-													self.Data.BlacklistRecorder[aoeID] = {map=TensorCore.mGetPlayer().localmapid,type="rectangle",pos=self.Data.Blacklistorder}
+													local timer = math.round(TensorReactions_CurrentTimer,3) or 0
+													self.Data.BlacklistRecorder[aoeID] = {map=TensorCore.mGetPlayer().localmapid,timer=timer,type="rectangle",pos=self.Data.Blacklistorder}
 												end
 											end
 										else
@@ -1625,7 +1628,8 @@ function self.Update()
 													else
 														self.Data.Blacklistorder = self.Data.Blacklistorder + 1
 													end
-													self.Data.BlacklistRecorder[aoeID] = {map=TensorCore.mGetPlayer().localmapid,type="donut",pos=self.Data.Blacklistorder}
+													local timer = math.round(TensorReactions_CurrentTimer,3) or 0
+													self.Data.BlacklistRecorder[aoeID] = {map=TensorCore.mGetPlayer().localmapid,timer=timer,type="donut",pos=self.Data.Blacklistorder}
 												end
 											elseif (#OmenInfo == 3 and not aoe.isAreaTarget) or str:match("fan") or is(aoeCastType,{3,13}) then -- Cone
 												local unknownCone = false
@@ -1638,7 +1642,8 @@ function self.Update()
 													else
 														self.Data.Blacklistorder = self.Data.Blacklistorder + 1
 													end
-													self.Data.BlacklistRecorder[aoeID] = {map=TensorCore.mGetPlayer().localmapid,type="cone",unknownCone=true,pos=self.Data.Blacklistorder}
+													local timer = math.round(TensorReactions_CurrentTimer,3) or 0
+													self.Data.BlacklistRecorder[aoeID] = {map=TensorCore.mGetPlayer().localmapid,timer=timer,type="cone",unknownCone=true,pos=self.Data.Blacklistorder}
 												end
 											else
 												fillCount = fillCount + 1
@@ -1650,7 +1655,8 @@ function self.Update()
 													else
 														self.Data.Blacklistorder = self.Data.Blacklistorder + 1
 													end
-													self.Data.BlacklistRecorder[aoeID] = {map=TensorCore.mGetPlayer().localmapid,type="circle",pos=self.Data.Blacklistorder}
+													local timer = math.round(TensorReactions_CurrentTimer,3) or 0
+													self.Data.BlacklistRecorder[aoeID] = {map=TensorCore.mGetPlayer().localmapid,timer=timer,type="circle",pos=self.Data.Blacklistorder}
 												end
 											end
 										end
@@ -2645,25 +2651,35 @@ function self.Draw()
 			local tbl2 = Settings.aoeIDUserSetDonuts
 			local sx,sy = GUI:GetWindowSize()
 			local flags = GUI.WindowFlags_NoTitleBar + GUI.WindowFlags_NoResize + GUI.WindowFlags_NoScrollbar + GUI.WindowFlags_NoScrollWithMouse + GUI.WindowFlags_NoCollapse + GUI.WindowFlags_NoSavedSettings
-			GUI:BeginChild("Moogle Telegraphs##Custom Angles",sx-45,(sy-100)/2,true)
 			GUI:Text("Custom Cone Angles")
+			GUI:BeginChild("Moogle Telegraphs##Custom Angles",sx-25,(sy-130)/2,true)
+			GUI:Columns(3, "##angles", true)
+			GUI:BeginGroup()
+			GUI:SetColumnWidth(-1,65)
+			GUI:Text("ID")  GUI:NextColumn()
+			GUI:SetColumnWidth(-1,400)
+			GUI:Text("Label")  GUI:NextColumn()
+			GUI:Text("Angle")  GUI:NextColumn()
 			GUI:Separator()
+
+			local sclicked = false
 			if table.valid(tbl) then
 				for k,v in table.pairsbykeys(tbl) do
-					--local contains = (function() if table.contains(tbl, k) then return true else return false end end)()
-					local _,clicked = GUI:Selectable(k.." - "..v.name.." - "..v.angle,false) 
-					if GUI:IsItemClicked(1) then 
-						--tbl[k] = nil
-						--d("removing "..k.." - "..v.name.." - " .. v.angle .. " from the list of custom angle.")
+					local _,clicked = GUI:Selectable(k,false, GUI.SelectableFlags_SpanAllColumns, sx, 14)
+					if clicked or GUI:IsItemClicked(1) then 
 						Data.newangleid = k
 						Data.newanglelabel = v.name
 						Data.newanglenum = v.angle
-						GUI:OpenPopup("menu1")
-					end
+						sclicked = true
+					end GUI:NextColumn()
+					GUI:Text(v.name) GUI:NextColumn()
+					GUI:Text(v.angle) GUI:NextColumn()
 				end
 			end
+
+			GUI:EndGroup()
 			GUI:EndChild()
-			if GUI:IsItemClicked(1) then
+			if sclicked or GUI:IsItemClicked(1) then
 				GUI:OpenPopup("menu1")
 			end
 			if GUI:BeginPopup("menu1", flags) then
@@ -2696,25 +2712,34 @@ function self.Draw()
 				GUI:EndPopup()
 			end
 
-			GUI:BeginChild("Moogle Telegraphs##Custom Radius",sx-45,(sy-100)/2,true)
 			GUI:Text("Custom Donut Radii")
+			GUI:BeginChild("Moogle Telegraphs##Custom Radius",sx-25,(sy-145)/2,true)
+			GUI:Columns(3, "##radius", true)
+			GUI:BeginGroup()
+			GUI:SetColumnWidth(-1,65)
+			GUI:Text("ID")  GUI:NextColumn()
+			GUI:SetColumnWidth(-1,400)
+			GUI:Text("Label")  GUI:NextColumn()
+			GUI:Text("Radius")  GUI:NextColumn()
 			GUI:Separator()
+			local sclicked = false
 			if table.valid(tbl2) then
 				for k,v in table.pairsbykeys(tbl2) do
-					--local contains = (function() if table.contains(tbl2, k) then return true else return false end end)()
-					local _,clicked = GUI:Selectable(k.." - "..v.name.." - "..v.radius,false) 
-					if GUI:IsItemClicked(1) then 
-						--tbl2[k] = nil
-						--d("removing "..k.." - "..v.name.." - " .. v.radius .. " from the list of custom radii.")
+					--local _,clicked = GUI:Selectable(k.." - "..v.name.." - "..v.radius,false) 
+					local _,clicked = GUI:Selectable(k,false, GUI.SelectableFlags_SpanAllColumns, sx, 14)
+					if clicked or GUI:IsItemClicked(1) then 
 						Data.newradiusid = k
 						Data.newradiuslabel = v.name
 						Data.newradiusnum = v.radius
-						--GUI:OpenPopup("menu2")
-					end
+						sclicked = true
+					end GUI:NextColumn()
+					GUI:Text(v.name) GUI:NextColumn()
+					GUI:Text(v.radius) GUI:NextColumn()
 				end
 			end
+			GUI:EndGroup()
 			GUI:EndChild()
-			if GUI:IsItemClicked(1) then
+			if sclicked or GUI:IsItemClicked(1) then
 				GUI:OpenPopup("menu2")	
 			end
 			if GUI:BeginPopup("menu2", flags) then
@@ -2752,32 +2777,58 @@ function self.Draw()
 				GUI:TextWrapped("Blacklisted AOEs will not have any draws. Right click on the box to add new IDs to the blacklist, or use the Recent Draws list.")
 				local tbl = Settings.aoeIDUserBlacklist
 				local sx,sy = GUI:GetWindowSize()
-				GUI:BeginChild("Moogle Telegraphs##Blacklist",sx-45,sy-100,true)
-				GUI:Text("Blacklisted AOE Draws")
+				GUI:BeginChild("Moogle Telegraphs##Blacklist",sx-45,sy-100,false)
+				GUI:Separator()
+				GUI:Columns(3, "##blacklist", true)
+				GUI:BeginGroup()
+				GUI:SetColumnWidth(-1,65)
+				GUI:Text("ID")  GUI:NextColumn()
+				GUI:SetColumnWidth(-1,375)
+				GUI:Text("Label")  GUI:NextColumn()
+				GUI:Text("Source") GUI:NextColumn()
 				GUI:Separator()
 				local flags = GUI.WindowFlags_NoTitleBar + GUI.WindowFlags_NoResize + GUI.WindowFlags_NoScrollbar + GUI.WindowFlags_NoScrollWithMouse + GUI.WindowFlags_NoCollapse + GUI.WindowFlags_NoSavedSettings
+				local sclicked = false
 				if table.valid(tbl) then
 					for k,v in table.pairsbykeys(tbl) do
-						--local contains = (function() if table.contains(tbl, k) then return true else return false end end)()
-						local _,clicked = GUI:Selectable(k.." - "..v,false) 
-						if GUI:IsItemClicked(1) then 
-							--tbl[k] = nil
-							--d("removing "..k.." - "..v.." from the aoe blacklist.")
-							Data.newblacklistid = k
-							Data.newblacklistlabel = v
+						
+						if type(v) == "string" then
+							if string.contains(v, "-") then
+								local src = string.match(v, "-(.*)")
+								tbl[k] = {label=string.match(v, "(.*)-"),source=src:sub(2)}
+							else
+								tbl[k] = {label=v,source=""}
+							end
 						end
+
+						local _,clicked = GUI:Selectable(k,false, GUI.SelectableFlags_SpanAllColumns, sx, 14) 
+						if clicked or GUI:IsItemClicked(1) then 
+							sclicked = true
+							Data.newblacklistid = k
+							Data.newblacklistlabel = v.label
+						end GUI:NextColumn()
+
+						GUI:Text(v.label) GUI:NextColumn()
+						GUI:Text(v.source) GUI:NextColumn()
+
 					end
 				end
+				
+				GUI:EndGroup()
 				GUI:EndChild()
-				if GUI:IsItemClicked(1) then
+				if GUI:IsItemClicked(1) or sclicked then
 					GUI:OpenPopup("menu1")
 				end
 				if GUI:BeginPopup("menu1", flags) then
 					Data.newblacklistid = GUI:InputText("aoe ID",Data.newblacklistid, GUI.InputTextFlags_EnterReturnsTrue + GUI.InputTextFlags_CharsDecimal)
 					Data.newblacklistlabel = GUI:InputText("label",Data.newblacklistlabel, GUI.InputTextFlags_EnterReturnsTrue)
-					if GUI:Button(GetString("Add")) then 
+					local str = "Add"
+					if Settings.aoeIDUserBlacklist[tonumber(Data.newblacklistid)] ~= nil then
+						str = "Save"
+					end
+					if GUI:Button(GetString(str)) then 
 						--table.insert(Settings.aoeIDUserBlacklist,Data.newblacklistid,Data.newblacklistlabel)
-						Settings.aoeIDUserBlacklist[tonumber(Data.newblacklistid)] = Data.newblacklistlabel
+						Settings.aoeIDUserBlacklist[tonumber(Data.newblacklistid)] = {label=Data.newblacklistlabel,source=""}
 						d("Added new blacklist entry succesfully.")
 						save(true)
 						GUI:CloseCurrentPopup()
@@ -2791,8 +2842,9 @@ function self.Draw()
 							GUI:CloseCurrentPopup()
 						end
 					end
+					GUI:Separator()
 					if GUI:Button(GetString("Copy Blacklist")) then
-						GUI:SetClipboardText(tostring(Settings.aoeIDUserBlacklist):gsub(".*\{","local TelegraphBL = \{").."return TelegraphBL")
+						GUI:SetClipboardText(tostring(Settings.aoeIDUserBlacklist):gsub("^(*?)\{","local TelegraphBL = \{").."\nreturn TelegraphBL")
 						d("[Moogle Telegraphs] Blacklist copied to clipboard.")
 						GUI:CloseCurrentPopup()
 					end
@@ -2802,7 +2854,7 @@ function self.Draw()
 						if table.valid(clipboard) then
 							for k,v in pairs(clipboard) do
 								if not Settings.aoeIDUserBlacklist[k] then
-									if type(k) == "number" and type(v) == "string" then
+									if type(k) == "number" and (type(v) == "string" or type(v) == "table") then
 										Settings.aoeIDUserBlacklist[k] = v
 									else
 										ml_error("[Moogle Telegraphs] Clipboard key/value is not valid.")
@@ -2833,12 +2885,23 @@ function self.Draw()
 					recentDraws[info.pos] = id
 				end
 
-				GUI:Columns(5, "##aoelist", true)
+				local num = 5
+				if TensorReactions_CurrentTimer ~= nil then num = 6 end
+				GUI:Columns(num, "##aoelist", true)
 				GUI:BeginGroup()
-				GUI:Text("ID")GUI:NextColumn()
+				GUI:SetColumnWidth(-1,60)
+				GUI:Text("ID")  GUI:NextColumn()
+				GUI:SetColumnWidth(-1,230)
 				GUI:Text("Name")GUI:NextColumn()
+				GUI:SetColumnWidth(-1,230)
 				GUI:Text("Map")GUI:NextColumn()
+				if TensorReactions_CurrentTimer ~= nil then
+					GUI:SetColumnWidth(-1,70)
+					GUI:Text("Timer")GUI:NextColumn()
+				end
+				GUI:SetColumnWidth(-1,120)
 				GUI:Text("Blacklist")GUI:NextColumn()
+				GUI:SetColumnWidth(-1,230)
 				GUI:Text("Type")GUI:NextColumn()
 				GUI:Separator()
 
@@ -2853,6 +2916,7 @@ function self.Draw()
 						GUI:Text(id) GUI:NextColumn()
 						GUI:Text(ac.name) GUI:NextColumn()
 						GUI:Text(mapName) GUI:NextColumn()
+						GUI:Text(info.timer) GUI:NextColumn()
 
 
 						if GUI:Button("Blacklist##MBL_blacklistbtn"..id) then
@@ -2881,6 +2945,7 @@ function self.Draw()
 						GUI:NextColumn()
 					end
 				end
+				GUI:Separator()
 
 				local miniflags = GUI.WindowFlags_NoTitleBar + GUI.WindowFlags_NoMove + GUI.WindowFlags_NoScrollbar + GUI.WindowFlags_NoScrollWithMouse + GUI.WindowFlags_NoCollapse + GUI.WindowFlags_NoSavedSettings
 				if GUI:BeginPopup("addangle", miniflags) then

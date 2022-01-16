@@ -1,0 +1,486 @@
+local tbl = 
+{
+	AlwaysShowAttackRange = true,
+	AlwaysShowMeleeRange = false,
+	AttackRangeOverrides = 
+	{
+		[37] = 
+		{
+			3,
+		},
+		[38] = 
+		{
+			5,
+			15,
+			25,
+		},
+		[40] = 
+		{
+			6,
+			25,
+		},
+	},
+	CardinalRGB = 
+	{
+		a = 1,
+		b = 0.050980392156863,
+		g = 0.10588235294118,
+		r = 0.66274509803922,
+	},
+	DebugCastingToConsole = false,
+	DebugChannelingToConsole = false,
+	DebugFile = true,
+	DebugLog12Hour = true,
+	DebugLogLimit = 10000,
+	DebugLogPopOut = false,
+	DebugLogPopOutCollapsed = false,
+	DebugLogPopOutPos = 
+	{
+		x = 0,
+		y = 0,
+	},
+	DebugLogPopOutSize = 
+	{
+		x = 530,
+		y = 175,
+	},
+	DebugMarkerToConsole = false,
+	DebugRecord = true,
+	DebugTypesEnabled = 
+	{
+		false,
+		false,
+		false,
+	},
+	DotDotU32 = 4278190335,
+	DotRGB = 
+	{
+		a = 1,
+		b = 0,
+		g = 0,
+		r = 1,
+	},
+	DotSize = 4,
+	DrawAttackRange = true,
+	DrawAutoAttackRange = false,
+	DrawCardinal = false,
+	DrawDotCombatOnly = true,
+	DrawDotInstanceOnly = false,
+	DrawFriendlyAoE = false,
+	DrawFriendlyLB = false,
+	DrawHeadingEntities = true,
+	DrawHealingAoE = false,
+	DrawHealingCirclesOutline = true,
+	DrawHealingOutOfRange = true,
+	DrawHealingOutlineIfHealer = true,
+	DrawIntercardinal = false,
+	DrawPlayerDot = true,
+	DrawRear = false,
+	DrawTrueNorth = false,
+	ExtendLines = false,
+	HealingAoeActions = 
+	{
+		124,
+		131,
+		133,
+		186,
+		206,
+		207,
+		208,
+		803,
+		825,
+		1594,
+		3362,
+		3583,
+		3600,
+		3601,
+		7439,
+		8324,
+		11406,
+		12578,
+		16015,
+		16517,
+		16534,
+		16537,
+		16543,
+		16544,
+		16546,
+		16547,
+		16550,
+		16553,
+		16558,
+		17001,
+		17152,
+		17763,
+		17785,
+		18318,
+		18945,
+		18946,
+		18947,
+		18948,
+		18950,
+		18951,
+		24286,
+		24318,
+	},
+	IntercardinalRGB = 
+	{
+		a = 1,
+		b = 0.44313725490196,
+		g = 0.082352941176471,
+		r = 0.14117647058824,
+	},
+	MainMenuEntryCreated = true,
+	MainMenuType = 2,
+	MarkPlayers = false,
+	MarkingActions = 
+	{
+		[645] = "Rock Throw",
+		[1181] = "Rock Throw",
+		[1652] = "透明：タイタン：岩の牢獄",
+		[1797] = "Rock Throw",
+	},
+	MarkingOverhead = 
+	{
+		[191] = "Granite Gaol",
+	},
+	MaxTelegraphDrawRange = 60,
+	MaxTelegraphsFilled = 20,
+	PartySortOrder = 
+	{
+		19,
+		1,
+		21,
+		3,
+		32,
+		37,
+		24,
+		6,
+		28,
+		33,
+		20,
+		2,
+		22,
+		4,
+		30,
+		29,
+		34,
+		23,
+		5,
+		31,
+		38,
+		25,
+		7,
+		27,
+		26,
+		35,
+		36,
+		8,
+		9,
+		10,
+		11,
+		12,
+		13,
+		14,
+		15,
+		16,
+		17,
+		18,
+	},
+	PlayerDotv2 = false,
+	RearColorRGB = 
+	{
+		a = 1,
+		b = 0.082352941176471,
+		g = 0.44705882352941,
+		r = 0.93725490196078,
+	},
+	TrueNorthRGB = 
+	{
+		a = 1,
+		b = 0.9412,
+		g = 0.9098,
+		r = 0.8431,
+	},
+	UnknownConeAngle = 270,
+	UnknownDonutRadius = 5,
+	alphafill = 
+	{
+		enemy = 
+		{
+			large = 
+			{
+				max = 0.15,
+				min = 0.025,
+			},
+			small = 
+			{
+				max = 0.28,
+				min = 0.05,
+			},
+		},
+		friend = 
+		{
+			large = 
+			{
+				max = 0.25,
+				min = 0.025,
+			},
+			small = 
+			{
+				max = 0.5,
+				min = 0.05,
+			},
+		},
+		healing = 
+		{
+			large = 
+			{
+				max = 0.25,
+				min = 0.025,
+			},
+			small = 
+			{
+				max = 0.5,
+				min = 0.05,
+			},
+		},
+	},
+	aoeIDUserBlacklist = 
+	{
+		[9911] = "Heavensfall",
+		[9912] = "Heavensfall",
+		[26134] = "Shining Cells (p1s) - Anyone's Reactions",
+		[26135] = "Slam Shut (p1s) - Anyone's Reactions",
+		[26154] = "Warder's Wrath (p1s) - Anyone's Reactions",
+		[26175] = "Murky Depths (p2s) - Anyone's Reactions",
+		[26299] = "Darkened Blaze (p3s) - Anyone's Reactions",
+		[26340] = "Dead Rebirth (p3s) - Anyone's Reactions",
+		[26356] = "Third Flames of Asphodelos (p3s)",
+		[26374] = "Scorched Exaltation (p3s) - Anyone's Reactions",
+		[26640] = "Sewage Deluge (p2s) - Anyone's Reactions",
+		[26671] = "Shockwave (p2s) - Anyone's Reactions",
+		[27126] = "Periaktoi Lava Pinax (p4s) - Anyone's Reactions",
+		[27129] = "Periaktoi Acid Pinax (p4s) - Anyone's Reactions",
+		[27131] = "Periaktoi Well Pinax (p4s) - Anyone's Reactions",
+		[27132] = "Periaktoi Levinstrike Pinax (p4s) - Anyone's Reactions",
+		[27145] = "Decollation (p4s) - Anyone's Reactions",
+		[27153] = "Act Start (p4s part 2) - Anyone's Reactions",
+		[27154] = "Act Start again (p4s part 2) - Anyone's Reactions",
+		[27155] = "Act Start again again (p4s part 2) - Anyone's Reactions",
+		[27181] = "Searing Stream (p4s part 2) - Anyone's Reactions",
+		[28070] = "Fake Gaoler's Flail animation 1 (p1s) - Anyone's Reactions",
+		[28071] = "Fake Gaoler's Flail animation 2 (p1s) - Anyone's Reactions",
+		[28072] = "Fake Gaoler's Flail animation 3 (p1s) - Anyone's Reactions",
+		[28073] = "Fake Gaoler's Flail animation 4 (p1s) - Anyone's Reactions",
+	},
+	aoeIDUserSetCones = 
+	{
+		[26342] = 
+		{
+			angle = 90,
+			name = "Ashen Eye (p3s) - Anyone's Reactions",
+		},
+		[26370] = 
+		{
+			angle = 180,
+			name = "Right Cinderwing (p3s) - Anyone's Reactions",
+		},
+		[26371] = 
+		{
+			angle = 180,
+			name = "Left Cinderwing (p3s) - Anyone's Reactions",
+		},
+		[27138] = 
+		{
+			angle = 100,
+			name = "Northern Shift (p4s) - Anyone's Reactions",
+		},
+		[27139] = 
+		{
+			angle = 100,
+			name = "Southerly Shift (p4s) - Anyone's Reactions",
+		},
+		[27140] = 
+		{
+			angle = 100,
+			name = "Easterly Shift (p4s) - Anyone's Reactions",
+		},
+		[27141] = 
+		{
+			angle = 100,
+			name = "Westerly Shift (p4s) - Anyone's Reactions",
+		},
+		[27794] = 
+		{
+			angle = 150,
+			name = "Aureole",
+		},
+		[28436] = 
+		{
+			angle = 150,
+			name = "Lateral Aureole",
+		},
+	},
+	aoeIDUserSetDonuts = 
+	{
+		[26362] = 
+		{
+			name = "Burning Twister (p3s) - Anyone's Reactions",
+			radius = 7,
+		},
+	},
+	enable = true,
+	fillRGB = 
+	{
+		enemy = 
+		{
+			finish = 
+			{
+				b = 0,
+				g = 0,
+				r = 213,
+			},
+			mid = 
+			{
+				b = 0,
+				g = 152,
+				r = 255,
+			},
+			start = 
+			{
+				b = 212,
+				g = 188,
+				r = 0,
+			},
+		},
+		friend = 
+		{
+			b = 1,
+			g = 0,
+			r = 0,
+		},
+		healing = 
+		{
+			b = 0,
+			g = 1,
+			r = 0,
+		},
+	},
+	largeAoE = 30,
+	maxSegments = 50,
+	open = true,
+	outlineRGB = 
+	{
+		enemy = 
+		{
+			a = 1,
+			b = 0,
+			g = 0,
+			r = 1,
+		},
+		friend = 
+		{
+			a = 1,
+			b = 1,
+			g = 0,
+			r = 0,
+		},
+		healing = 
+		{
+			a = 1,
+			b = 0,
+			g = 1,
+			r = 0,
+		},
+		rangeInside = 
+		{
+			a = 0.3,
+			b = 1,
+			g = 1,
+			r = 1,
+		},
+		rangeOutside = 
+		{
+			a = 0.3,
+			b = 0,
+			g = 1,
+			r = 1,
+		},
+	},
+	outlineThickness = 
+	{
+		enemy = 2,
+		friend = 2,
+		healing = 2,
+		range = 4,
+	},
+	showHeadingEntities = 
+	{
+		
+		{
+			contentid = "8381",
+			customFront = 5,
+			customHitRadius = 3,
+			mapid = 0,
+			name = "Nyx",
+			note = "Ahriman's in E2/E2S that inflicts Damage Down and Diabolic Curse on contact.",
+		},
+		
+		{
+			contentid = "7109",
+			customFront = 50,
+			customHitRadius = 0,
+			mapid = 0,
+			name = "Missile",
+			note = "",
+		},
+		
+		{
+			contentid = "6202",
+			customFront = 50,
+			customHitRadius = 0,
+			mapid = 0,
+			name = "Rearguard Mine",
+			note = "",
+		},
+		
+		{
+			contentid = "6206",
+			customFront = 50,
+			customHitRadius = 4,
+			mapid = 0,
+			name = "Retuned Magitek Bit",
+			note = "",
+		},
+	},
+	showHeadingFillingRGB = 
+	{
+		a = 0.15,
+		b = 0,
+		g = 0,
+		r = 0.5,
+	},
+	showHeadingMinFront = 1.5,
+	showHeadingMinRadius = 1.5,
+	showHeadingOutlineRGB = 
+	{
+		a = 0.5,
+		b = 0,
+		g = 0,
+		r = 0.5,
+	},
+	showHeadingOutlineThickness = 6,
+	showHeadingUntargetableMovingEntities = true,
+	syncVerticalPosHeight = 
+	{
+		above = 5,
+		below = 1,
+		near = 0.5,
+	},
+	verticesSpacing = 0.5,
+}
+
+
+
+return tbl
