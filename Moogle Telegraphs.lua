@@ -2844,7 +2844,7 @@ function self.Draw()
 					end
 					GUI:Separator()
 					if GUI:Button(GetString("Copy Blacklist")) then
-						GUI:SetClipboardText(tostring(Settings.aoeIDUserBlacklist):gsub("^(*?)\{","local TelegraphBL = \{").."\nreturn TelegraphBL")
+						GUI:SetClipboardText(tostring(Settings.aoeIDUserBlacklist):gsub("^(.-)%{","local TelegraphBL = \{").."return TelegraphBL")
 						d("[Moogle Telegraphs] Blacklist copied to clipboard.")
 						GUI:CloseCurrentPopup()
 					end
