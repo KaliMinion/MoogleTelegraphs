@@ -239,7 +239,7 @@ self.Settings = {
 	ExtendLines = false,
 
 
-	UnknownConeAngle = 90,
+	UserUnknownConeAngle = 90,
 	UnknownDonutRadius = 5,
 
 
@@ -1482,7 +1482,7 @@ function self.Update()
 		if Settings.enable then
 			local p,aoes = TensorCore.mGetPlayer(), { Ground = Argus.getCurrentGroundAOEs(true), Directional = Argus.getCurrentDirectionalAOEs(true) }
 			local DrawHealing,DrawFriendly,DrawLB = Settings.DrawHealingAoE,Settings.DrawFriendlyAoE,Settings.DrawFriendlyLB
-			local alphafill,fillRGB,largeAoE,maxSegments,outlineRGB,outlineThickness,UnknownConeAngle,UnknownDonutRadius = Settings.alphafill,Settings.fillRGB,Settings.largeAoE,Settings.maxSegments,Settings.outlineRGB,Settings.outlineThickness,Settings.UnknownConeAngle,Settings.UnknownDonutRadius
+			local alphafill,fillRGB,largeAoE,maxSegments,outlineRGB,outlineThickness,UnknownConeAngle,UnknownDonutRadius = Settings.alphafill,Settings.fillRGB,Settings.largeAoE,Settings.maxSegments,Settings.outlineRGB,Settings.outlineThickness,Settings.UserUnknownConeAngle,Settings.UnknownDonutRadius
 			local smallEnemy,largeEnemy,smallHealing,largeHealing,smallFriend,largeFriend,enemyFill,healingFill,friendFill,outlineEnemy,outlineHealing,outlineFriend,outlineThicknessEnemy,outlineThicknessHealing,outlineThicknessFriend = alphafill.enemy.small,alphafill.enemy.large,alphafill.healing.small,alphafill.healing.large,alphafill.friend.small,alphafill.friend.large,fillRGB.enemy,fillRGB.healing,fillRGB.friend,outlineRGB.enemy,outlineRGB.healing,outlineRGB.friend,outlineThickness.enemy,outlineThickness.healing,outlineThickness.friend
 			local fillCount,maxFillCount = 0,Settings.MaxTelegraphsFilled
 			for source,tbl in pairs(aoes) do
@@ -1598,7 +1598,7 @@ function self.Update()
 														self.Data.Blacklistorder = self.Data.Blacklistorder + 1
 													end
 													local timer = math.round(TensorReactions_CurrentTimer,3) or 0
-													self.Data.BlacklistRecorder[aoeID] = {map=TensorCore.mGetPlayer().localmapid,timer=timer,type="cross",pos=self.Data.Blacklistorder}
+													self.Data.BlacklistRecorder[aoeID] = {map=p.localmapid,timer=timer,type="cross",pos=self.Data.Blacklistorder}
 												end
 											else -- Line
 												fillCount = fillCount + 1
@@ -1611,7 +1611,7 @@ function self.Update()
 														self.Data.Blacklistorder = self.Data.Blacklistorder + 1
 													end
 													local timer = math.round(TensorReactions_CurrentTimer,3) or 0
-													self.Data.BlacklistRecorder[aoeID] = {map=TensorCore.mGetPlayer().localmapid,timer=timer,type="rectangle",pos=self.Data.Blacklistorder}
+													self.Data.BlacklistRecorder[aoeID] = {map=p.localmapid,timer=timer,type="rectangle",pos=self.Data.Blacklistorder}
 												end
 											end
 										else
@@ -1629,13 +1629,13 @@ function self.Update()
 														self.Data.Blacklistorder = self.Data.Blacklistorder + 1
 													end
 													local timer = math.round(TensorReactions_CurrentTimer,3) or 0
-													self.Data.BlacklistRecorder[aoeID] = {map=TensorCore.mGetPlayer().localmapid,timer=timer,type="donut",pos=self.Data.Blacklistorder}
+													self.Data.BlacklistRecorder[aoeID] = {map=p.localmapid,timer=timer,type="donut",pos=self.Data.Blacklistorder}
 												end
 											elseif (#OmenInfo == 3 and not aoe.isAreaTarget) or str:match("fan") or is(aoeCastType,{3,13}) then -- Cone
 												local unknownCone = false
 												fillCount = fillCount + 1
 												preAllocExtra.fillCount = fillCount
-												DrawCone(aoe, preAllocExtra, (function() if (tonumber(OmenInfo) or 0) > 0 then return tonumber(OmenInfo) else if self.Settings.aoeIDUserSetCones[aoeID] ~= nil then return self.Settings.aoeIDUserSetCones[aoeID].angle else unknownCone = true return UnknownConeAngle end end end)() )
+												DrawCone(aoe, preAllocExtra, (function() if (tonumber(OmenInfo) or 0) > 0 then return tonumber(OmenInfo) else if self.Settings.aoeIDUserSetCones[aoeID] ~= nil then return self.Settings.aoeIDUserSetCones[aoeID].angle else unknownCone = true if self.Data.reactionsUnknownConeAngle ~= nil and self.Data.reactionsUnknownConeAngleMap == p.localmapid then return self.Data.reactionsUnknownConeAngle else return UnknownConeAngle end end end end)() )
 												if not self.Data.BlacklistRecorder[aoeID] then
 													if self.Data.Blacklistorder == nil then 
 														self.Data.Blacklistorder = 1 
@@ -1643,7 +1643,7 @@ function self.Update()
 														self.Data.Blacklistorder = self.Data.Blacklistorder + 1
 													end
 													local timer = math.round(TensorReactions_CurrentTimer,3) or 0
-													self.Data.BlacklistRecorder[aoeID] = {map=TensorCore.mGetPlayer().localmapid,timer=timer,type="cone",unknownCone=true,pos=self.Data.Blacklistorder}
+													self.Data.BlacklistRecorder[aoeID] = {map=p.localmapid,timer=timer,type="cone",unknownCone=unknownCone,pos=self.Data.Blacklistorder}
 												end
 											else
 												fillCount = fillCount + 1
@@ -1656,7 +1656,7 @@ function self.Update()
 														self.Data.Blacklistorder = self.Data.Blacklistorder + 1
 													end
 													local timer = math.round(TensorReactions_CurrentTimer,3) or 0
-													self.Data.BlacklistRecorder[aoeID] = {map=TensorCore.mGetPlayer().localmapid,timer=timer,type="circle",pos=self.Data.Blacklistorder}
+													self.Data.BlacklistRecorder[aoeID] = {map=p.localmapid,timer=timer,type="circle",pos=self.Data.Blacklistorder}
 												end
 											end
 										end
@@ -2653,13 +2653,14 @@ function self.Draw()
 			local flags = GUI.WindowFlags_NoTitleBar + GUI.WindowFlags_NoResize + GUI.WindowFlags_NoScrollbar + GUI.WindowFlags_NoScrollWithMouse + GUI.WindowFlags_NoCollapse + GUI.WindowFlags_NoSavedSettings
 			GUI:Text("Custom Cone Angles")
 			GUI:BeginChild("Moogle Telegraphs##Custom Angles",sx-25,(sy-130)/2,true)
-			GUI:Columns(3, "##angles", true)
+			GUI:Columns(4, "##angles", true)
 			GUI:BeginGroup()
 			GUI:SetColumnWidth(-1,65)
 			GUI:Text("ID")  GUI:NextColumn()
-			GUI:SetColumnWidth(-1,400)
+			GUI:SetColumnWidth(-1,300)
 			GUI:Text("Label")  GUI:NextColumn()
 			GUI:Text("Angle")  GUI:NextColumn()
+			GUI:Text("Source")  GUI:NextColumn()
 			GUI:Separator()
 
 			local sclicked = false
@@ -2674,6 +2675,8 @@ function self.Draw()
 					end GUI:NextColumn()
 					GUI:Text(v.name) GUI:NextColumn()
 					GUI:Text(v.angle) GUI:NextColumn()
+					local src = v.source or ""
+					GUI:Text(src) GUI:NextColumn()
 				end
 			end
 
@@ -2714,13 +2717,14 @@ function self.Draw()
 
 			GUI:Text("Custom Donut Radii")
 			GUI:BeginChild("Moogle Telegraphs##Custom Radius",sx-25,(sy-145)/2,true)
-			GUI:Columns(3, "##radius", true)
+			GUI:Columns(4, "##radius", true)
 			GUI:BeginGroup()
 			GUI:SetColumnWidth(-1,65)
 			GUI:Text("ID")  GUI:NextColumn()
-			GUI:SetColumnWidth(-1,400)
+			GUI:SetColumnWidth(-1,300)
 			GUI:Text("Label")  GUI:NextColumn()
 			GUI:Text("Radius")  GUI:NextColumn()
+			GUI:Text("Source")  GUI:NextColumn()
 			GUI:Separator()
 			local sclicked = false
 			if table.valid(tbl2) then
@@ -2735,6 +2739,8 @@ function self.Draw()
 					end GUI:NextColumn()
 					GUI:Text(v.name) GUI:NextColumn()
 					GUI:Text(v.radius) GUI:NextColumn()
+					local src = v.source or ""
+					GUI:Text(src) GUI:NextColumn()
 				end
 			end
 			GUI:EndGroup()
@@ -2844,7 +2850,7 @@ function self.Draw()
 					end
 					GUI:Separator()
 					if GUI:Button(GetString("Copy Blacklist")) then
-						GUI:SetClipboardText(tostring(Settings.aoeIDUserBlacklist):gsub("^(*?)\{","local TelegraphBL = \{").."\nreturn TelegraphBL")
+						GUI:SetClipboardText(tostring(Settings.aoeIDUserBlacklist):gsub("^(.-)%{","local TelegraphBL = \{").."return TelegraphBL")
 						d("[Moogle Telegraphs] Blacklist copied to clipboard.")
 						GUI:CloseCurrentPopup()
 					end
@@ -3256,9 +3262,9 @@ function self.Draw()
 				--Settings.DebugRecord = GUI:Checkbox(GetString("Record Missed Telegraphs"),Settings.DebugRecord) GUI:SameLine(0,15)
 				--Settings.DebugFile = GUI:Checkbox(GetString("Output Debug to File"),Settings.DebugFile)
 				GUI:Text(GetString("Set Unknown Cone Angles to: ")) GUI:SameLine(0,0) GUI:PushItemWidth(100)
-				local val,changed = GUI:SliderInt("##UnknownConeAngle",Settings.UnknownConeAngle,1,180)
+				local val,changed = GUI:SliderInt("##UnknownConeAngle",Settings.UserUnknownConeAngle,1,180)
 				if changed and val > 0 then
-					Settings.UnknownConeAngle = val save(true)
+					Settings.UserUnknownConeAngle = val save(true)
 				end
 				GUI:Text(GetString("Set Unknown Donut Inner-Radius to: ")) GUI:SameLine(0,0)
 				local val,changed = GUI:SliderInt("##UnknownDonutRadius",Settings.UnknownDonutRadius,1,10)
