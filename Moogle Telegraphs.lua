@@ -1399,12 +1399,12 @@ function self.DrawCone(aoe,extra,angle)
 	local enemyFill,outlineEnemy = ColorGradient(extra,fill)
 
 	Argus.addConeFilled(pos.x, pos.y, pos.z, Radius, math.rad(angle), pos.h, Segments,
-						extra.friendly and 	GUI:ColorConvertFloat4ToU32(extra.friendFill.r, extra.friendFill.g, extra.friendFill.b, fill)
-											or GUI:ColorConvertFloat4ToU32(enemyFill.r, enemyFill.g, enemyFill.b, enemyFill.a),
-						extra.friendly and 	GUI:ColorConvertFloat4ToU32(extra.outlineFriend.r, extra.outlineFriend.g, extra.outlineFriend.b, extra.outlineFriend.a)
-											or GUI:ColorConvertFloat4ToU32(outlineEnemy.r, outlineEnemy.g, outlineEnemy.b, extra.outlineEnemy.a),
-						extra.friendly and extra.outlineThicknessFriend or extra.outlineThicknessEnemy
-					)
+	                    extra.friendly and 	GUI:ColorConvertFloat4ToU32(extra.friendFill.r, extra.friendFill.g, extra.friendFill.b, fill)
+			                    or GUI:ColorConvertFloat4ToU32(enemyFill.r, enemyFill.g, enemyFill.b, enemyFill.a),
+	                    extra.friendly and 	GUI:ColorConvertFloat4ToU32(extra.outlineFriend.r, extra.outlineFriend.g, extra.outlineFriend.b, extra.outlineFriend.a)
+			                    or GUI:ColorConvertFloat4ToU32(outlineEnemy.r, outlineEnemy.g, outlineEnemy.b, extra.outlineEnemy.a),
+	                    extra.friendly and extra.outlineThicknessFriend or extra.outlineThicknessEnemy
+	)
 end
 local DrawCone = self.DrawCone
 
@@ -1417,17 +1417,17 @@ function self.DrawDonut(aoe,extra,radiusInner)
 	--d("["..aoe.aoeID.."] "..tostring(aoe.aoeName)..", Radius Inner: "..tostring(radiusInner)..", Hit Radius: "..tostring(extra.hitradius))
 	Argus.addDonutFilled(pos.x, pos.y, pos.z, (function()
 		if self.Settings.aoeIDUserSetDonuts[aoe.aoeID] ~= nil then return self.Settings.aoeIDUserSetDonuts[aoe.aoeID].radius else
-		if radiusInner then
-			if radiusInner ~= 0 then return radiusInner
-			elseif extra.hitradius~= 0 then return extra.hitradius + 2
-			else return self.Settings.UnknownDonutRadius end
-		elseif extra.hitradius and extra.hitradius~= 0 then return extra.hitradius
-		else return self.Settings.UnknownDonutRadius end end end)(), Radius, Segments,
-			extra.friendly and GUI:ColorConvertFloat4ToU32(extra.friendFill.r, extra.friendFill.g, extra.friendFill.b, fill) or
-					GUI:ColorConvertFloat4ToU32(enemyFill.r, enemyFill.g, enemyFill.b, enemyFill.a),
-			extra.friendly and GUI:ColorConvertFloat4ToU32(extra.outlineFriend.r, extra.outlineFriend.g, extra.outlineFriend.b, extra.outlineFriend.a) or
-					GUI:ColorConvertFloat4ToU32(outlineEnemy.r, outlineEnemy.g, outlineEnemy.b, extra.outlineEnemy.a),
-			extra.friendly and extra.outlineThicknessFriend or extra.outlineThicknessEnemy)
+			if radiusInner then
+				if radiusInner ~= 0 then return radiusInner
+				elseif extra.hitradius~= 0 then return extra.hitradius + 2
+				else return self.Settings.UnknownDonutRadius end
+			elseif extra.hitradius and extra.hitradius~= 0 then return extra.hitradius
+			else return self.Settings.UnknownDonutRadius end end end)(), Radius, Segments,
+	                     extra.friendly and GUI:ColorConvertFloat4ToU32(extra.friendFill.r, extra.friendFill.g, extra.friendFill.b, fill) or
+			                     GUI:ColorConvertFloat4ToU32(enemyFill.r, enemyFill.g, enemyFill.b, enemyFill.a),
+	                     extra.friendly and GUI:ColorConvertFloat4ToU32(extra.outlineFriend.r, extra.outlineFriend.g, extra.outlineFriend.b, extra.outlineFriend.a) or
+			                     GUI:ColorConvertFloat4ToU32(outlineEnemy.r, outlineEnemy.g, outlineEnemy.b, extra.outlineEnemy.a),
+	                     extra.friendly and extra.outlineThicknessFriend or extra.outlineThicknessEnemy)
 end
 local DrawDonut = self.DrawDonut
 
@@ -1438,13 +1438,13 @@ function self.DrawCircle(aoe,extra)
 	local fill,pos = fill(extra.fillCount,extra.maxFillCount,(function() if tonumber(Radius) < tonumber(extra.largeAoE) then return extra.small else return extra.large end end)(),extra.channeltime,extra.casttime), extra.pos
 	local enemyFill,outlineEnemy = ColorGradient(extra,fill)
 	Argus.addCircleFilled(pos.x, pos.y, pos.z, Radius, Segments,
-			extra.isHealing and GUI:ColorConvertFloat4ToU32(extra.healingFill.r, extra.healingFill.g, extra.healingFill.b, fill) or
-				extra.friendly and GUI:ColorConvertFloat4ToU32(extra.friendFill.r, extra.friendFill.g, extra.friendFill.b, fill) or
-				GUI:ColorConvertFloat4ToU32(enemyFill.r, enemyFill.g, enemyFill.b, enemyFill.a),
-			extra.isHealing and GUI:ColorConvertFloat4ToU32(extra.outlineHealing.r, extra.outlineHealing.g, extra.outlineHealing.b, extra.outlineHealing.a) or
-				extra.friendly and GUI:ColorConvertFloat4ToU32(extra.outlineFriend.r, extra.outlineFriend.g, extra.outlineFriend.b, extra.outlineFriend.a) or
-				GUI:ColorConvertFloat4ToU32(outlineEnemy.r, outlineEnemy.g, outlineEnemy.b, extra.outlineEnemy.a),
-			extra.friendly and extra.outlineThicknessFriend or extra.outlineThicknessEnemy)
+	                      extra.isHealing and GUI:ColorConvertFloat4ToU32(extra.healingFill.r, extra.healingFill.g, extra.healingFill.b, fill) or
+			                      extra.friendly and GUI:ColorConvertFloat4ToU32(extra.friendFill.r, extra.friendFill.g, extra.friendFill.b, fill) or
+			                      GUI:ColorConvertFloat4ToU32(enemyFill.r, enemyFill.g, enemyFill.b, enemyFill.a),
+	                      extra.isHealing and GUI:ColorConvertFloat4ToU32(extra.outlineHealing.r, extra.outlineHealing.g, extra.outlineHealing.b, extra.outlineHealing.a) or
+			                      extra.friendly and GUI:ColorConvertFloat4ToU32(extra.outlineFriend.r, extra.outlineFriend.g, extra.outlineFriend.b, extra.outlineFriend.a) or
+			                      GUI:ColorConvertFloat4ToU32(outlineEnemy.r, outlineEnemy.g, outlineEnemy.b, extra.outlineEnemy.a),
+	                      extra.friendly and extra.outlineThicknessFriend or extra.outlineThicknessEnemy)
 end
 local DrawCircle = self.DrawCircle
 
@@ -1453,11 +1453,11 @@ function self.DrawRect(aoe,extra)
 	local fill,pos = fill(extra.fillCount,extra.maxFillCount,(function() if tonumber(aoe.aoeWidth) < tonumber(extra.largeAoE) then return extra.small else return extra.large end end)(),extra.channeltime,extra.casttime),extra.pos
 	local enemyFill,outlineEnemy = ColorGradient(extra,fill)
 	Argus.addRectFilled(pos.x, pos.y, pos.z, aoe.aoeLength, aoe.aoeWidth, pos.h,
-			extra.friendly and GUI:ColorConvertFloat4ToU32(extra.friendFill.r, extra.friendFill.g, extra.friendFill.b, fill) or
-					GUI:ColorConvertFloat4ToU32(enemyFill.r, enemyFill.g, enemyFill.b, enemyFill.a),
-			extra.friendly and GUI:ColorConvertFloat4ToU32(extra.outlineFriend.r, extra.outlineFriend.g, extra.outlineFriend.b, extra.outlineFriend.a) or
-					GUI:ColorConvertFloat4ToU32(outlineEnemy.r, outlineEnemy.g, outlineEnemy.b, extra.outlineEnemy.a),
-			extra.friendly and extra.outlineThicknessFriend or extra.outlineThicknessEnemy)
+	                    extra.friendly and GUI:ColorConvertFloat4ToU32(extra.friendFill.r, extra.friendFill.g, extra.friendFill.b, fill) or
+			                    GUI:ColorConvertFloat4ToU32(enemyFill.r, enemyFill.g, enemyFill.b, enemyFill.a),
+	                    extra.friendly and GUI:ColorConvertFloat4ToU32(extra.outlineFriend.r, extra.outlineFriend.g, extra.outlineFriend.b, extra.outlineFriend.a) or
+			                    GUI:ColorConvertFloat4ToU32(outlineEnemy.r, outlineEnemy.g, outlineEnemy.b, extra.outlineEnemy.a),
+	                    extra.friendly and extra.outlineThicknessFriend or extra.outlineThicknessEnemy)
 
 end
 local DrawRect = self.DrawRect
@@ -1467,11 +1467,11 @@ function self.DrawCross(aoe,extra)
 	local fill,pos = fill(extra.fillCount,extra.maxFillCount,(function() if tonumber(aoe.aoeWidth) < tonumber(extra.largeAoE) then return extra.small else return extra.large end end)(),extra.channeltime,extra.casttime), extra.pos
 	local enemyFill,outlineEnemy = ColorGradient(extra,fill)
 	Argus.addCrossFilled(pos.x, pos.y, pos.z, aoe.aoeLength, aoe.aoeWidth, pos.h,
-			extra.friendly and GUI:ColorConvertFloat4ToU32(extra.friendFill.r, extra.friendFill.g, extra.friendFill.b, fill) or
-					GUI:ColorConvertFloat4ToU32(enemyFill.r, enemyFill.g, enemyFill.b, enemyFill.a),
-			extra.friendly and GUI:ColorConvertFloat4ToU32(extra.outlineFriend.r, extra.outlineFriend.g, extra.outlineFriend.b, extra.outlineFriend.a) or
-					GUI:ColorConvertFloat4ToU32(outlineEnemy.r, outlineEnemy.g, outlineEnemy.b, extra.outlineEnemy.a),
-			extra.friendly and extra.outlineThicknessFriend or extra.outlineThicknessEnemy)
+	                     extra.friendly and GUI:ColorConvertFloat4ToU32(extra.friendFill.r, extra.friendFill.g, extra.friendFill.b, fill) or
+			                     GUI:ColorConvertFloat4ToU32(enemyFill.r, enemyFill.g, enemyFill.b, enemyFill.a),
+	                     extra.friendly and GUI:ColorConvertFloat4ToU32(extra.outlineFriend.r, extra.outlineFriend.g, extra.outlineFriend.b, extra.outlineFriend.a) or
+			                     GUI:ColorConvertFloat4ToU32(outlineEnemy.r, outlineEnemy.g, outlineEnemy.b, extra.outlineEnemy.a),
+	                     extra.friendly and extra.outlineThicknessFriend or extra.outlineThicknessEnemy)
 end
 local DrawCross = self.DrawCross
 
@@ -1553,7 +1553,7 @@ function self.Update()
 										local casttime,channeltime,channeltargetid = (function() if valid(cinfo) then return cinfo.casttime,cinfo.channeltime,cinfo.channeltargetid else return 0,0,0 end end)()
 										local aoeCastType,Omen,Width = aoe.aoeCastType, aoe.aoeEffectInfo.aoeEffectName, tonumber(aoe.aoeWidth)
 
-										preAllocExtra.entity = entity 
+										preAllocExtra.entity = entity
 										preAllocExtra.pos = pos
 										preAllocExtra.friendly = friendly
 										preAllocExtra.isHealing = isHealing
@@ -1584,20 +1584,20 @@ function self.Update()
 										preAllocExtra.outlineThicknessHealing = outlineThicknessHealing
 										preAllocExtra.outlineThicknessFriend = outlineThicknessFriend
 
-										
-										
+
+
 										if Width > 0 or aoeCastType == 11 then
 											if aoeCastType == 11 then -- Cross
 												fillCount = fillCount + 1
 												preAllocExtra.fillCount = fillCount
 												DrawCross( aoe, preAllocExtra )
 												if not self.Data.BlacklistRecorder[aoeID] then
-													if self.Data.Blacklistorder == nil then 
-														self.Data.Blacklistorder = 1 
+													if self.Data.Blacklistorder == nil then
+														self.Data.Blacklistorder = 1
 													else
 														self.Data.Blacklistorder = self.Data.Blacklistorder + 1
 													end
-													local timer = math.round(TensorReactions_CurrentTimer,3) or 0
+													local timer = math.round(TensorReactions_CurrentTimer or 0,3) or 0
 													self.Data.BlacklistRecorder[aoeID] = {map=p.localmapid,timer=timer,type="cross",pos=self.Data.Blacklistorder}
 												end
 											else -- Line
@@ -1605,12 +1605,12 @@ function self.Update()
 												preAllocExtra.fillCount = fillCount
 												DrawRect( aoe, preAllocExtra )
 												if not self.Data.BlacklistRecorder[aoeID] then
-													if self.Data.Blacklistorder == nil then 
-														self.Data.Blacklistorder = 1 
+													if self.Data.Blacklistorder == nil then
+														self.Data.Blacklistorder = 1
 													else
 														self.Data.Blacklistorder = self.Data.Blacklistorder + 1
 													end
-													local timer = math.round(TensorReactions_CurrentTimer,3) or 0
+													local timer = math.round(TensorReactions_CurrentTimer or 0,3) or 0
 													self.Data.BlacklistRecorder[aoeID] = {map=p.localmapid,timer=timer,type="rectangle",pos=self.Data.Blacklistorder}
 												end
 											end
@@ -1623,12 +1623,12 @@ function self.Update()
 												preAllocExtra.fillCount = fillCount
 												DrawDonut(aoe, preAllocExtra, tonumber(OmenInfo:sub(-2)) or 0 )
 												if not self.Data.BlacklistRecorder[aoeID] then
-													if self.Data.Blacklistorder == nil then 
-														self.Data.Blacklistorder = 1 
+													if self.Data.Blacklistorder == nil then
+														self.Data.Blacklistorder = 1
 													else
 														self.Data.Blacklistorder = self.Data.Blacklistorder + 1
 													end
-													local timer = math.round(TensorReactions_CurrentTimer,3) or 0
+													local timer = math.round(TensorReactions_CurrentTimer or 0,3) or 0
 													self.Data.BlacklistRecorder[aoeID] = {map=p.localmapid,timer=timer,type="donut",pos=self.Data.Blacklistorder}
 												end
 											elseif (#OmenInfo == 3 and not aoe.isAreaTarget) or str:match("fan") or is(aoeCastType,{3,13}) then -- Cone
@@ -1637,12 +1637,12 @@ function self.Update()
 												preAllocExtra.fillCount = fillCount
 												DrawCone(aoe, preAllocExtra, (function() if (tonumber(OmenInfo) or 0) > 0 then return tonumber(OmenInfo) else if self.Settings.aoeIDUserSetCones[aoeID] ~= nil then return self.Settings.aoeIDUserSetCones[aoeID].angle else unknownCone = true if self.Data.reactionsUnknownConeAngle ~= nil and self.Data.reactionsUnknownConeAngleMap == p.localmapid then return self.Data.reactionsUnknownConeAngle else return UnknownConeAngle end end end end)() )
 												if not self.Data.BlacklistRecorder[aoeID] then
-													if self.Data.Blacklistorder == nil then 
-														self.Data.Blacklistorder = 1 
+													if self.Data.Blacklistorder == nil then
+														self.Data.Blacklistorder = 1
 													else
 														self.Data.Blacklistorder = self.Data.Blacklistorder + 1
 													end
-													local timer = math.round(TensorReactions_CurrentTimer,3) or 0
+													local timer = math.round(TensorReactions_CurrentTimer or 0,3) or 0
 													self.Data.BlacklistRecorder[aoeID] = {map=p.localmapid,timer=timer,type="cone",unknownCone=unknownCone,pos=self.Data.Blacklistorder}
 												end
 											else
@@ -1650,18 +1650,18 @@ function self.Update()
 												preAllocExtra.fillCount = fillCount
 												DrawCircle( aoe, preAllocExtra )
 												if not self.Data.BlacklistRecorder[aoeID] then
-													if self.Data.Blacklistorder == nil then 
-														self.Data.Blacklistorder = 1 
+													if self.Data.Blacklistorder == nil then
+														self.Data.Blacklistorder = 1
 													else
 														self.Data.Blacklistorder = self.Data.Blacklistorder + 1
 													end
-													local timer = math.round(TensorReactions_CurrentTimer,3) or 0
+													local timer = math.round(TensorReactions_CurrentTimer or 0,3) or 0
 													self.Data.BlacklistRecorder[aoeID] = {map=p.localmapid,timer=timer,type="circle",pos=self.Data.Blacklistorder}
 												end
 											end
 										end
 
-										
+
 									end
 								end
 							else
@@ -1766,7 +1766,7 @@ Argus.registerOnEntityCast(function(entityID, actionID)
 			--table.insert(self.Data.DebugLog,tbl)
 			FileWrite(DebugOutput,"[Casting] "..tbl.line.."\n", true)
 		end
-		
+
 	end
 	if settings.MarkPlayers and settings.MarkingActions[actionID] and valid(entity) then
 		local ct = entity.castinginfo.castingtargets
@@ -1805,7 +1805,7 @@ Argus.registerOnEntityChannel(function(entityID, channelID, targetID, channelTim
 			--table.insert(self.Data.DebugLog,tbl)
 			FileWrite(DebugOutput,"[Channeling] "..tbl.line.."\n", true)
 		end
-end end)
+	end end)
 
 Argus.registerOnMarkerAdd(function(entityID, markerType) --d("["..tostring(entityID).."] "..tostring(markerType))
 	local entity,Data,Settings = EntityList:Get(entityID),self.Data,self.Settings
@@ -2335,7 +2335,7 @@ function self.Draw()
 					Settings.DrawFriendlyAoE = not Settings.DrawFriendlyAoE save(true)
 				end
 				if GUI:BeginPopup("Friendly Color Editor", GUI.WindowFlags_NoTitleBar + GUI.WindowFlags_NoResize + GUI.WindowFlags_NoMove + GUI.WindowFlags_NoScrollbar + GUI.WindowFlags_NoScrollWithMouse + GUI.WindowFlags_NoCollapse + GUI.WindowFlags_NoSavedSettings) then
-						GUI:ColorEditMode(ColorEditModeFlags)
+					GUI:ColorEditMode(ColorEditModeFlags)
 					--local r,g,b,changed = GUI:ColorEdit3("Friendly Color##FriendlyColorTelegraphs",friendFill.r, friendFill.g, friendFill.b)
 					local r,g,b,changed = self.ColorEditor("Friendly Color##FriendlyColorTelegraphs",friendFill.r, friendFill.g, friendFill.b)
 					if (changed) then
@@ -2640,143 +2640,143 @@ function self.Draw()
 				--Settings.DrawFriendlyOutRange = GUI:Checkbox(GetString("Only if Outside of AoE"),Settings.DrawFriendlyOutRange)
 				--GUI:SameLine(0,15)
 				--Settings.DrawFriendlyLB = GUI:Checkbox(GetString("Draw Limit Break"),Settings.DrawFriendlyLB)
-			--elseif (tabname == GetString("Markers")) then
-			--	Settings.MarkPlayers = GUI:Checkbox(GetString("Mark Players"),Settings.MarkPlayers)
-			--	GUI:Text(GetString("Work In Progress"))
+				--elseif (tabname == GetString("Markers")) then
+				--	Settings.MarkPlayers = GUI:Checkbox(GetString("Mark Players"),Settings.MarkPlayers)
+				--	GUI:Text(GetString("Work In Progress"))
 
-		elseif (tabname == GetString("Custom Angles")) then
+			elseif (tabname == GetString("Custom Angles")) then
 
-			GUI:TextWrapped("Use this to set custom angles & radii for cones and donuts. This info isn't always available to Argus, so Moogle Telegraphs will guess otherwise. Right click on the box to add new IDs, or you can use the Recent Draws list.")
-			local tbl = Settings.aoeIDUserSetCones
-			local tbl2 = Settings.aoeIDUserSetDonuts
-			local sx,sy = GUI:GetWindowSize()
-			local flags = GUI.WindowFlags_NoTitleBar + GUI.WindowFlags_NoResize + GUI.WindowFlags_NoScrollbar + GUI.WindowFlags_NoScrollWithMouse + GUI.WindowFlags_NoCollapse + GUI.WindowFlags_NoSavedSettings
-			GUI:Text("Custom Cone Angles")
-			GUI:BeginChild("Moogle Telegraphs##Custom Angles",sx-25,(sy-130)/2,true)
-			GUI:Columns(4, "##angles", true)
-			GUI:BeginGroup()
-			GUI:SetColumnWidth(-1,65)
-			GUI:Text("ID")  GUI:NextColumn()
-			GUI:SetColumnWidth(-1,300)
-			GUI:Text("Label")  GUI:NextColumn()
-			GUI:Text("Angle")  GUI:NextColumn()
-			GUI:Text("Source")  GUI:NextColumn()
-			GUI:Separator()
+				GUI:TextWrapped("Use this to set custom angles & radii for cones and donuts. This info isn't always available to Argus, so Moogle Telegraphs will guess otherwise. Right click on the box to add new IDs, or you can use the Recent Draws list.")
+				local tbl = Settings.aoeIDUserSetCones
+				local tbl2 = Settings.aoeIDUserSetDonuts
+				local sx,sy = GUI:GetWindowSize()
+				local flags = GUI.WindowFlags_NoTitleBar + GUI.WindowFlags_NoResize + GUI.WindowFlags_NoScrollbar + GUI.WindowFlags_NoScrollWithMouse + GUI.WindowFlags_NoCollapse + GUI.WindowFlags_NoSavedSettings
+				GUI:Text("Custom Cone Angles")
+				GUI:BeginChild("Moogle Telegraphs##Custom Angles",sx-25,(sy-130)/2,true)
+				GUI:Columns(4, "##angles", true)
+				GUI:BeginGroup()
+				GUI:SetColumnWidth(-1,65)
+				GUI:Text("ID")  GUI:NextColumn()
+				GUI:SetColumnWidth(-1,300)
+				GUI:Text("Label")  GUI:NextColumn()
+				GUI:Text("Angle")  GUI:NextColumn()
+				GUI:Text("Source")  GUI:NextColumn()
+				GUI:Separator()
 
-			local sclicked = false
-			if table.valid(tbl) then
-				for k,v in table.pairsbykeys(tbl) do
-					local _,clicked = GUI:Selectable(k,false, GUI.SelectableFlags_SpanAllColumns, sx, 14)
-					if clicked or GUI:IsItemClicked(1) then 
-						Data.newangleid = k
-						Data.newanglelabel = v.name
-						Data.newanglenum = v.angle
-						sclicked = true
-					end GUI:NextColumn()
-					GUI:Text(v.name) GUI:NextColumn()
-					GUI:Text(v.angle) GUI:NextColumn()
-					local src = v.source or ""
-					GUI:Text(src) GUI:NextColumn()
+				local sclicked = false
+				if table.valid(tbl) then
+					for k,v in table.pairsbykeys(tbl) do
+						local _,clicked = GUI:Selectable(k,false, GUI.SelectableFlags_SpanAllColumns, sx, 14)
+						if clicked or GUI:IsItemClicked(1) then
+							Data.newangleid = k
+							Data.newanglelabel = v.name
+							Data.newanglenum = v.angle
+							sclicked = true
+						end GUI:NextColumn()
+						GUI:Text(v.name) GUI:NextColumn()
+						GUI:Text(v.angle) GUI:NextColumn()
+						local src = v.source or ""
+						GUI:Text(src) GUI:NextColumn()
+					end
 				end
-			end
 
-			GUI:EndGroup()
-			GUI:EndChild()
-			if sclicked or GUI:IsItemClicked(1) then
-				GUI:OpenPopup("menu1")
-			end
-			if GUI:BeginPopup("menu1", flags) then
-				if Data.newangleid == nil then Data.newangleid = 0 end
-				if Data.newanglelabel == nil then Data.newanglelabel = "" end
-				if Data.newanglenum == nil then Data.newanglenum = 90 end
-				Data.newangleid = GUI:InputText("aoe ID",Data.newangleid, GUI.InputTextFlags_EnterReturnsTrue + GUI.InputTextFlags_CharsDecimal)
-				Data.newanglelabel = GUI:InputText("label",Data.newanglelabel, GUI.InputTextFlags_EnterReturnsTrue)
-				Data.newanglenum = GUI:InputText("angle",Data.newanglenum, GUI.InputTextFlags_EnterReturnsTrue + GUI.InputTextFlags_CharsDecimal)
-				local str = "Add"
-				if Settings.aoeIDUserSetCones[tonumber(Data.newangleid)] ~= nil then
-					str = "Save"
+				GUI:EndGroup()
+				GUI:EndChild()
+				if sclicked or GUI:IsItemClicked(1) then
+					GUI:OpenPopup("menu1")
 				end
-				if GUI:Button(GetString(str)) then 
-					Settings.aoeIDUserSetCones[tonumber(Data.newangleid)] = {name=Data.newanglelabel,angle=tonumber(Data.newanglenum)}
-					d("Added new angle entry succesfully.")
-					Data.newanglelabel = nil
-					save(true)
-					GUI:CloseCurrentPopup()
-				end
-				if Settings.aoeIDUserSetCones[tonumber(Data.newangleid)] ~= nil then
-					GUI:SameLine()
-					if GUI:Button(GetString("Remove")) then
-						Settings.aoeIDUserSetCones[tonumber(Data.newangleid)] = nil
-						d("removing "..Data.newangleid.." - "..Data.newanglelabel.." - " .. Data.newanglenum .. " from the list of custom angles.")
+				if GUI:BeginPopup("menu1", flags) then
+					if Data.newangleid == nil then Data.newangleid = 0 end
+					if Data.newanglelabel == nil then Data.newanglelabel = "" end
+					if Data.newanglenum == nil then Data.newanglenum = 90 end
+					Data.newangleid = GUI:InputText("aoe ID",Data.newangleid, GUI.InputTextFlags_EnterReturnsTrue + GUI.InputTextFlags_CharsDecimal)
+					Data.newanglelabel = GUI:InputText("label",Data.newanglelabel, GUI.InputTextFlags_EnterReturnsTrue)
+					Data.newanglenum = GUI:InputText("angle",Data.newanglenum, GUI.InputTextFlags_EnterReturnsTrue + GUI.InputTextFlags_CharsDecimal)
+					local str = "Add"
+					if Settings.aoeIDUserSetCones[tonumber(Data.newangleid)] ~= nil then
+						str = "Save"
+					end
+					if GUI:Button(GetString(str)) then
+						Settings.aoeIDUserSetCones[tonumber(Data.newangleid)] = {name=Data.newanglelabel,angle=tonumber(Data.newanglenum)}
+						d("Added new angle entry succesfully.")
+						Data.newanglelabel = nil
 						save(true)
 						GUI:CloseCurrentPopup()
 					end
+					if Settings.aoeIDUserSetCones[tonumber(Data.newangleid)] ~= nil then
+						GUI:SameLine()
+						if GUI:Button(GetString("Remove")) then
+							Settings.aoeIDUserSetCones[tonumber(Data.newangleid)] = nil
+							d("removing "..Data.newangleid.." - "..Data.newanglelabel.." - " .. Data.newanglenum .. " from the list of custom angles.")
+							save(true)
+							GUI:CloseCurrentPopup()
+						end
+					end
+					GUI:EndPopup()
 				end
-				GUI:EndPopup()
-			end
 
-			GUI:Text("Custom Donut Radii")
-			GUI:BeginChild("Moogle Telegraphs##Custom Radius",sx-25,(sy-145)/2,true)
-			GUI:Columns(4, "##radius", true)
-			GUI:BeginGroup()
-			GUI:SetColumnWidth(-1,65)
-			GUI:Text("ID")  GUI:NextColumn()
-			GUI:SetColumnWidth(-1,300)
-			GUI:Text("Label")  GUI:NextColumn()
-			GUI:Text("Radius")  GUI:NextColumn()
-			GUI:Text("Source")  GUI:NextColumn()
-			GUI:Separator()
-			local sclicked = false
-			if table.valid(tbl2) then
-				for k,v in table.pairsbykeys(tbl2) do
-					--local _,clicked = GUI:Selectable(k.." - "..v.name.." - "..v.radius,false) 
-					local _,clicked = GUI:Selectable(k,false, GUI.SelectableFlags_SpanAllColumns, sx, 14)
-					if clicked or GUI:IsItemClicked(1) then 
-						Data.newradiusid = k
-						Data.newradiuslabel = v.name
-						Data.newradiusnum = v.radius
-						sclicked = true
-					end GUI:NextColumn()
-					GUI:Text(v.name) GUI:NextColumn()
-					GUI:Text(v.radius) GUI:NextColumn()
-					local src = v.source or ""
-					GUI:Text(src) GUI:NextColumn()
+				GUI:Text("Custom Donut Radii")
+				GUI:BeginChild("Moogle Telegraphs##Custom Radius",sx-25,(sy-145)/2,true)
+				GUI:Columns(4, "##radius", true)
+				GUI:BeginGroup()
+				GUI:SetColumnWidth(-1,65)
+				GUI:Text("ID")  GUI:NextColumn()
+				GUI:SetColumnWidth(-1,300)
+				GUI:Text("Label")  GUI:NextColumn()
+				GUI:Text("Radius")  GUI:NextColumn()
+				GUI:Text("Source")  GUI:NextColumn()
+				GUI:Separator()
+				local sclicked = false
+				if table.valid(tbl2) then
+					for k,v in table.pairsbykeys(tbl2) do
+						--local _,clicked = GUI:Selectable(k.." - "..v.name.." - "..v.radius,false)
+						local _,clicked = GUI:Selectable(k,false, GUI.SelectableFlags_SpanAllColumns, sx, 14)
+						if clicked or GUI:IsItemClicked(1) then
+							Data.newradiusid = k
+							Data.newradiuslabel = v.name
+							Data.newradiusnum = v.radius
+							sclicked = true
+						end GUI:NextColumn()
+						GUI:Text(v.name) GUI:NextColumn()
+						GUI:Text(v.radius) GUI:NextColumn()
+						local src = v.source or ""
+						GUI:Text(src) GUI:NextColumn()
+					end
 				end
-			end
-			GUI:EndGroup()
-			GUI:EndChild()
-			if sclicked or GUI:IsItemClicked(1) then
-				GUI:OpenPopup("menu2")	
-			end
-			if GUI:BeginPopup("menu2", flags) then
-				if Data.newradiusid == nil then Data.newradiusid = 0 end
-				if Data.newradiuslabel == nil then Data.newradiuslabel = "" end
-				if Data.newradiusnum == nil then Data.newradiusnum = 5 end
-				Data.newradiusid = GUI:InputText("aoe ID",Data.newradiusid, GUI.InputTextFlags_EnterReturnsTrue + GUI.InputTextFlags_CharsDecimal)
-				Data.newradiuslabel = GUI:InputText("label",Data.newradiuslabel, GUI.InputTextFlags_EnterReturnsTrue)
-				Data.newradiusnum = GUI:InputText("radius",Data.newradiusnum, GUI.InputTextFlags_EnterReturnsTrue + GUI.InputTextFlags_CharsDecimal)
-				local str = "Add"
-				if Settings.aoeIDUserSetCones[tonumber(Data.newangleid)] ~= nil then
-					str = "Save"
+				GUI:EndGroup()
+				GUI:EndChild()
+				if sclicked or GUI:IsItemClicked(1) then
+					GUI:OpenPopup("menu2")
 				end
-				if GUI:Button(GetString(str)) then 
-					Settings.aoeIDUserSetDonuts[tonumber(Data.newradiusid)] = {name=Data.newradiuslabel,radius=tonumber(Data.newradiusnum)}
-					Data.newradiuslabel = nil
-					d("Added new radius entry succesfully.")
-					save(true)
-					GUI:CloseCurrentPopup()
-				end
-				if Settings.aoeIDUserSetDonuts[tonumber(Data.newradiusid)] ~= nil then
-					GUI:SameLine()
-					if GUI:Button(GetString("Remove")) then
-						Settings.aoeIDUserSetDonuts[tonumber(Data.newradiusid)] = nil
-						d("removing "..Data.newradiusid.." - "..Data.newradiuslabel.." - " .. Data.newradiusnum .. " from the list of custom radiuss.")
+				if GUI:BeginPopup("menu2", flags) then
+					if Data.newradiusid == nil then Data.newradiusid = 0 end
+					if Data.newradiuslabel == nil then Data.newradiuslabel = "" end
+					if Data.newradiusnum == nil then Data.newradiusnum = 5 end
+					Data.newradiusid = GUI:InputText("aoe ID",Data.newradiusid, GUI.InputTextFlags_EnterReturnsTrue + GUI.InputTextFlags_CharsDecimal)
+					Data.newradiuslabel = GUI:InputText("label",Data.newradiuslabel, GUI.InputTextFlags_EnterReturnsTrue)
+					Data.newradiusnum = GUI:InputText("radius",Data.newradiusnum, GUI.InputTextFlags_EnterReturnsTrue + GUI.InputTextFlags_CharsDecimal)
+					local str = "Add"
+					if Settings.aoeIDUserSetCones[tonumber(Data.newangleid)] ~= nil then
+						str = "Save"
+					end
+					if GUI:Button(GetString(str)) then
+						Settings.aoeIDUserSetDonuts[tonumber(Data.newradiusid)] = {name=Data.newradiuslabel,radius=tonumber(Data.newradiusnum)}
+						Data.newradiuslabel = nil
+						d("Added new radius entry succesfully.")
 						save(true)
 						GUI:CloseCurrentPopup()
 					end
+					if Settings.aoeIDUserSetDonuts[tonumber(Data.newradiusid)] ~= nil then
+						GUI:SameLine()
+						if GUI:Button(GetString("Remove")) then
+							Settings.aoeIDUserSetDonuts[tonumber(Data.newradiusid)] = nil
+							d("removing "..Data.newradiusid.." - "..Data.newradiuslabel.." - " .. Data.newradiusnum .. " from the list of custom radiuss.")
+							save(true)
+							GUI:CloseCurrentPopup()
+						end
+					end
+					GUI:EndPopup()
 				end
-				GUI:EndPopup()
-			end
 
 			elseif (tabname == GetString("Blacklist")) then
 
@@ -2797,7 +2797,7 @@ function self.Draw()
 				local sclicked = false
 				if table.valid(tbl) then
 					for k,v in table.pairsbykeys(tbl) do
-						
+
 						if type(v) == "string" then
 							if string.contains(v, "-") then
 								local src = string.match(v, "-(.*)")
@@ -2807,8 +2807,8 @@ function self.Draw()
 							end
 						end
 
-						local _,clicked = GUI:Selectable(k,false, GUI.SelectableFlags_SpanAllColumns, sx, 14) 
-						if clicked or GUI:IsItemClicked(1) then 
+						local _,clicked = GUI:Selectable(k,false, GUI.SelectableFlags_SpanAllColumns, sx, 14)
+						if clicked or GUI:IsItemClicked(1) then
 							sclicked = true
 							Data.newblacklistid = k
 							Data.newblacklistlabel = v.label
@@ -2819,7 +2819,7 @@ function self.Draw()
 
 					end
 				end
-				
+
 				GUI:EndGroup()
 				GUI:EndChild()
 				if GUI:IsItemClicked(1) or sclicked then
@@ -2832,7 +2832,7 @@ function self.Draw()
 					if Settings.aoeIDUserBlacklist[tonumber(Data.newblacklistid)] ~= nil then
 						str = "Save"
 					end
-					if GUI:Button(GetString(str)) then 
+					if GUI:Button(GetString(str)) then
 						--table.insert(Settings.aoeIDUserBlacklist,Data.newblacklistid,Data.newblacklistlabel)
 						Settings.aoeIDUserBlacklist[tonumber(Data.newblacklistid)] = {label=Data.newblacklistlabel,source=""}
 						d("Added new blacklist entry succesfully.")
@@ -2915,7 +2915,7 @@ function self.Draw()
 				local addradius = false
 				for i = #recentDraws, 1, -1 do
 					local id = recentDraws[i]
-					if table.valid(self.Data.BlacklistRecorder[id]) and not self.Settings.aoeIDUserSetCones[id] and not self.Settings.aoeIDUserSetDonuts[id] then 
+					if table.valid(self.Data.BlacklistRecorder[id]) and not self.Settings.aoeIDUserSetCones[id] and not self.Settings.aoeIDUserSetDonuts[id] then
 						local ac = ActionList:Get(1, id)
 						local info = self.Data.BlacklistRecorder[id]
 						local mapName = GetMapName(info.map)
@@ -2955,7 +2955,7 @@ function self.Draw()
 
 				local miniflags = GUI.WindowFlags_NoTitleBar + GUI.WindowFlags_NoMove + GUI.WindowFlags_NoScrollbar + GUI.WindowFlags_NoScrollWithMouse + GUI.WindowFlags_NoCollapse + GUI.WindowFlags_NoSavedSettings
 				if GUI:BeginPopup("addangle", miniflags) then
-					
+
 					if Data.newangleid == nil then Data.newangleid = 0 end
 					--Data.newangleid = GUI:InputText("id",Data.newangleid, GUI.InputTextFlags_EnterReturnsTrue + GUI.InputTextFlags_CharsDecimal)
 					if Data.newanglelabel == nil then Data.newanglelabel = "" end
@@ -2963,7 +2963,7 @@ function self.Draw()
 					if Data.newanglenum == nil then Data.newanglenum = "90" end
 					Data.newanglenum = GUI:InputText("angle",Data.newanglenum, GUI.InputTextFlags_EnterReturnsTrue + GUI.InputTextFlags_CharsDecimal)
 
-					if GUI:Button(GetString("Add")) then 
+					if GUI:Button(GetString("Add")) then
 						local validInput = (type(tonumber(Data.newanglenum) == "number"))
 						if validInput then
 							self.Settings.aoeIDUserSetCones[tonumber(Data.newangleid)] = {name=Data.newanglelabel,angle=tonumber(Data.newanglenum)}
@@ -2975,12 +2975,12 @@ function self.Draw()
 						end
 						GUI:CloseCurrentPopup()
 					end
-					
+
 					GUI:EndPopup()
 				end
 
 				if GUI:BeginPopup("addradius", miniflags) then
-					
+
 					if Data.newradiusid == nil then Data.newradiusid = 0 end
 					--Data.newradiusid = GUI:InputText("id",Data.newradiusid, GUI.InputTextFlags_EnterReturnsTrue + GUI.InputTextFlags_CharsDecimal)
 					if Data.newradiuslabel == nil then Data.newradiuslabel = "" end
@@ -2988,7 +2988,7 @@ function self.Draw()
 					if Data.newradiusnum == nil then Data.newradiusnum = "5" end
 					Data.newradiusnum = GUI:InputText("radius",Data.newradiusnum, GUI.InputTextFlags_EnterReturnsTrue + GUI.InputTextFlags_CharsDecimal)
 
-					if GUI:Button(GetString("Add")) then 
+					if GUI:Button(GetString("Add")) then
 						local validInput = (type(tonumber(Data.newradiusnum) == "number"))
 						if validInput then
 							self.Settings.aoeIDUserSetDonuts[tonumber(Data.newradiusid)] = {name=Data.newradiuslabel,radius=tonumber(Data.newradiusnum)}
@@ -3000,7 +3000,7 @@ function self.Draw()
 						end
 						GUI:CloseCurrentPopup()
 					end
-					
+
 					GUI:EndPopup()
 				end
 
@@ -3424,7 +3424,7 @@ function self.Draw()
 						local rangeOutside,pos,Radius,maxSegments = outlineRGB.rangeOutside,target.pos,target.hitradius + p.hitradius + maxRange,Settings.maxSegments
 						local Segments = (function() local seg = ((Radius * 2) * math.pi) / Settings.verticesSpacing if seg <= maxSegments then return seg else return maxSegments end end)()
 						Argus.addCircleFilled(pos.x, pos.y, pos.z, Radius, Segments,nil,
-								GUI:ColorConvertFloat4ToU32(rangeOutside.r,rangeOutside.g,rangeOutside.b,rangeOutside.a),Settings.outlineThickness.range)
+						                      GUI:ColorConvertFloat4ToU32(rangeOutside.r,rangeOutside.g,rangeOutside.b,rangeOutside.a),Settings.outlineThickness.range)
 					else
 						local buffer = maxRange - dist
 						local alphaPercent = (1.5 - buffer) / 1.5
@@ -3437,7 +3437,7 @@ function self.Draw()
 							local Segments = (function() local seg = ((Radius * 2) * math.pi) / Settings.verticesSpacing if seg <= maxSegments then return seg else return maxSegments end end)()
 							local alpha = rangeInside.a * alphaPercent
 							Argus.addCircleFilled(pos.x, pos.y, pos.z, Radius, Segments,nil,
-									GUI:ColorConvertFloat4ToU32(rangeInside.r,rangeInside.g,rangeInside.b,alpha),Settings.outlineThickness.range)
+							                      GUI:ColorConvertFloat4ToU32(rangeInside.r,rangeInside.g,rangeInside.b,alpha),Settings.outlineThickness.range)
 						end
 					end
 				end
@@ -3469,19 +3469,19 @@ function self.Draw()
 						local heading = pos.h + (math.pi * ( 0.25 * i ))
 						--local nextpos = GetPosFromDistanceHeading(pos, length, heading)
 						--if not DrawRear or i == 3 or i == 5 then
-							if i % 2 == 0 then
-								-- even, cardinal
-								if DrawCardinal then
-									Argus.addRectFilled(pos.x, pos.y, pos.z, length, 0, heading, GUI:ColorConvertFloat4ToU32(CardinalRGB.r,CardinalRGB.g,CardinalRGB.b,CardinalRGB.a))
-								end
-							elseif DrawIntercardinal or DrawRear then -- odd, intercardinal
-								if DrawRear and (i == 3 or i == 5) then
-									local RearColorRGB = Settings.RearColorRGB
-									Argus.addRectFilled(pos.x, pos.y, pos.z, length, 0, heading, GUI:ColorConvertFloat4ToU32(RearColorRGB.r,RearColorRGB.g,RearColorRGB.b,RearColorRGB.a))
-								elseif DrawIntercardinal then
-									Argus.addRectFilled(pos.x, pos.y, pos.z, length, 0, heading, GUI:ColorConvertFloat4ToU32(IntercardinalRGB.r,IntercardinalRGB.g,IntercardinalRGB.b,IntercardinalRGB.a))
-								end
+						if i % 2 == 0 then
+							-- even, cardinal
+							if DrawCardinal then
+								Argus.addRectFilled(pos.x, pos.y, pos.z, length, 0, heading, GUI:ColorConvertFloat4ToU32(CardinalRGB.r,CardinalRGB.g,CardinalRGB.b,CardinalRGB.a))
 							end
+						elseif DrawIntercardinal or DrawRear then -- odd, intercardinal
+							if DrawRear and (i == 3 or i == 5) then
+								local RearColorRGB = Settings.RearColorRGB
+								Argus.addRectFilled(pos.x, pos.y, pos.z, length, 0, heading, GUI:ColorConvertFloat4ToU32(RearColorRGB.r,RearColorRGB.g,RearColorRGB.b,RearColorRGB.a))
+							elseif DrawIntercardinal then
+								Argus.addRectFilled(pos.x, pos.y, pos.z, length, 0, heading, GUI:ColorConvertFloat4ToU32(IntercardinalRGB.r,IntercardinalRGB.g,IntercardinalRGB.b,IntercardinalRGB.a))
+							end
+						end
 						--end
 					end
 				end
@@ -3496,8 +3496,8 @@ function self.Draw()
 				local Radius,angle = 8,90
 				local Segments = (function() local seg = ((Radius * 2) * math.pi) / Settings.verticesSpacing if seg <= Settings.maxSegments then return seg else return Settings.maxSegments end end)()
 				Argus.addConeFilled(pos.x, pos.y, pos.z, Radius, math.rad(angle), pos.h, Segments,
-						GUI:ColorConvertFloat4ToU32(fill.r, fill.g, fill.b, a),
-						GUI:ColorConvertFloat4ToU32(outline.r, outline.g, outline.b, outline.a), thickness)
+				                    GUI:ColorConvertFloat4ToU32(fill.r, fill.g, fill.b, a),
+				                    GUI:ColorConvertFloat4ToU32(outline.r, outline.g, outline.b, outline.a), thickness)
 			elseif self.GUI.main_tabs.tabs[4].isselected then
 				local Radius = Settings.showHeadingMinRadius
 				local Length = (Radius * 2) + Settings.showHeadingMinFront
