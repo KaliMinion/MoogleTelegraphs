@@ -335,8 +335,9 @@ self.Settings = {
 		--[16685] = "Rock Throw",
 	}
 }
+local Settings = self.Settings
 
-self.Override = {}
+--self.Override = {}
 
 self.Data = {
 	loaded = false,
@@ -986,7 +987,7 @@ self.Data = {
 	newblacklistid = "0",
 
 }
---local Data = self.Data
+local Data = self.Data
 
 self.GUI = {
 	WindowName = selfslong.."##MainWindow",
@@ -1162,7 +1163,7 @@ function self.LoadSettings()
 		end
 		return tbl
 	end
-	self.Settings = scan(self.Settings,tbl)
+	Settings = scan(Settings,tbl)
 end
 local LoadSettings = self.LoadSettings
 
@@ -1170,17 +1171,16 @@ local PreviousSave,lastcheck = {},0
 function self.save(force)
 	if (force or TimeSince(lastcheck) > 30000) then
 		lastcheck = Now()
-		if not table.deepcompare(self.Settings,PreviousSave) then
-			FileSave(ModuleSettings,self.Settings)
-			PreviousSave = table.deepcopy(self.Settings)
+		if not table.deepcompare(Settings,PreviousSave) then
+			FileSave(ModuleSettings,Settings)
+			PreviousSave = table.deepcopy(Settings)
 		end
 	end
 end
 local save = self.save
 
 function self.Initialize()
-	self.GUI.main_tabs = GUI_CreateTabs("Telegraphs,Custom Angles,Blacklist,Recent Draws,Extras,Debug")
-	local Settings = self.Settings
+	Gui.main_tabs = GUI_CreateTabs("Telegraphs,Custom Angles,Blacklist,Recent Draws,Extras,Debug")
 	local ModuleTable = self.GUI
 	local MainIcon = ImageFolder .. [[MoogleStuff.png]]
 	local MenuType = Settings.MainMenuType
@@ -1242,13 +1242,13 @@ function self.Initialize()
 
 	--local ActionInfo = ModulePath.."ActionInfo.lua"
 	--if FileExists(ActionInfo) then
-	--    self.Data.ActionInfo = FileLoad(ActionInfo)
-	--	local nameOmens = self.Data.ActionNameOmens
-	--	local actionInfo = self.Data.ActionInfo
+	--    Data.ActionInfo = FileLoad(ActionInfo)
+	--	local nameOmens = Data.ActionNameOmens
+	--	local actionInfo = Data.ActionInfo
 	--	for k,v in pairs(actionInfo) do
 	--		if v[1] ~= 0 then
 	--			if not nameOmens[v[11]] then nameOmens[v[11]] = {} end
-	--			local omen = self.Data.Omen[v[1]]
+	--			local omen = Data.Omen[v[1]]
 	--			if not nameOmens[v[11]][omen] then nameOmens[v[11]][omen] = true end
 	--		end
 	--	end
@@ -1305,12 +1305,12 @@ local IsFriend = self.IsFriend
 --local WriteOutput = self.WriteOutput
 
 --function self.DebugRecord(aoe,aoeType,entity,Note)
---	if self.Settings.DebugRecord then
+--	if Settings.DebugRecord then
 --		local ID = aoe.aoeID
---		local tbl = self.Data.DebugRecordings[aoeType]
+--		local tbl = Data.DebugRecordings[aoeType]
 --		if not tbl[ID] then
 --			tbl[ID] = aoe
---			local t,ActionInfo = tbl[ID],self.Data.ActionInfo
+--			local t,ActionInfo = tbl[ID],Data.ActionInfo
 --			t.Time = os.date("%X")
 --			if valid(entity) then
 --				t.EntityName = entity.name
@@ -1348,7 +1348,7 @@ local IsFriend = self.IsFriend
 --local DebugRecord = self.DebugRecord
 
 function self.ColorGradient(extra,fill)
-	local colorTable = self.Settings.fillRGB.enemy
+	local colorTable = Settings.fillRGB.enemy
 	local start,mid,finish = colorTable.start, colorTable.mid, colorTable.finish
 	local r,g,b,a
 	local pctComplete = extra.channeltime / extra.casttime
@@ -1416,13 +1416,13 @@ function self.DrawDonut(aoe,extra,radiusInner)
 	local enemyFill,outlineEnemy = ColorGradient(extra,fill)
 	--d("["..aoe.aoeID.."] "..tostring(aoe.aoeName)..", Radius Inner: "..tostring(radiusInner)..", Hit Radius: "..tostring(extra.hitradius))
 	Argus.addDonutFilled(pos.x, pos.y, pos.z, (function()
-		if self.Settings.aoeIDUserSetDonuts[aoe.aoeID] ~= nil then return self.Settings.aoeIDUserSetDonuts[aoe.aoeID].radius else
+		if Settings.aoeIDUserSetDonuts[aoe.aoeID] ~= nil then return Settings.aoeIDUserSetDonuts[aoe.aoeID].radius else
 			if radiusInner then
 				if radiusInner ~= 0 then return radiusInner
 				elseif extra.hitradius~= 0 then return extra.hitradius + 2
-				else return self.Settings.UnknownDonutRadius end
+				else return Settings.UnknownDonutRadius end
 			elseif extra.hitradius and extra.hitradius~= 0 then return extra.hitradius
-			else return self.Settings.UnknownDonutRadius end end end)(), Radius, Segments,
+			else return Settings.UnknownDonutRadius end end end)(), Radius, Segments,
 	                     extra.friendly and GUI:ColorConvertFloat4ToU32(extra.friendFill.r, extra.friendFill.g, extra.friendFill.b, fill) or
 			                     GUI:ColorConvertFloat4ToU32(enemyFill.r, enemyFill.g, enemyFill.b, enemyFill.a),
 	                     extra.friendly and GUI:ColorConvertFloat4ToU32(extra.outlineFriend.r, extra.outlineFriend.g, extra.outlineFriend.b, extra.outlineFriend.a) or
@@ -1477,11 +1477,10 @@ local DrawCross = self.DrawCross
 
 local valid = table.valid
 function self.Update()
-	local Data,Settings,Override = self.Data,self.Settings,self.Override
+	--local Override = self.Override
 	if Data.loaded then
 		if Settings.enable then
 			local p,aoes = TensorCore.mGetPlayer(), { Ground = Argus.getCurrentGroundAOEs(true), Directional = Argus.getCurrentDirectionalAOEs(true) }
-			local DrawHealing,DrawFriendly,DrawLB = Settings.DrawHealingAoE,Settings.DrawFriendlyAoE,Settings.DrawFriendlyLB
 			local alphafill,fillRGB,largeAoE,maxSegments,outlineRGB,outlineThickness,UnknownConeAngle,UnknownDonutRadius = Settings.alphafill,Settings.fillRGB,Settings.largeAoE,Settings.maxSegments,Settings.outlineRGB,Settings.outlineThickness,Settings.UserUnknownConeAngle,Settings.UnknownDonutRadius
 			local smallEnemy,largeEnemy,smallHealing,largeHealing,smallFriend,largeFriend,enemyFill,healingFill,friendFill,outlineEnemy,outlineHealing,outlineFriend,outlineThicknessEnemy,outlineThicknessHealing,outlineThicknessFriend = alphafill.enemy.small,alphafill.enemy.large,alphafill.healing.small,alphafill.healing.large,alphafill.friend.small,alphafill.friend.large,fillRGB.enemy,fillRGB.healing,fillRGB.friend,outlineRGB.enemy,outlineRGB.healing,outlineRGB.friend,outlineThickness.enemy,outlineThickness.healing,outlineThickness.friend
 			local fillCount,maxFillCount = 0,Settings.MaxTelegraphsFilled
@@ -1497,175 +1496,169 @@ function self.Update()
 						--	elseif diff < sync.below then pos.y = ppos.y end
 						--end
 						if maxDrawRange == 0 or Distance3D(pos,ppos) <= maxDrawRange then
-							if not Override[aoeID] then
-								local entity = EntityList:Get(id)
-								local friendly,cinfo,hitradius = (function() if valid(entity) then return IsFriend(entity) or false, entity.castinginfo, (function() local hitradius = entity.hitradius if hitradius < 1.5 then
-									local el = EntityList("name="..tostring(entity.name))
-									if valid(el) then for _,e in pairs(el) do
-										local hitrad = e.hitradius
-										if hitrad > hitradius then hitradius = hitrad end
-									end end
-								end return hitradius end)() else return false,false,0 end end)()
-								if (not friendly or (DrawHealing or DrawFriendly)) and (not Data.LB[aoeID] or DrawLB) then -- TODO: add logic to not draw if within range if healing or friendly
+							local entity = TensorCore.mGetEntity(id)
+							local friendly,cinfo,hitradius = (function() if valid(entity) then return IsFriend(entity) or false, entity.castinginfo, (function() local hitradius = entity.hitradius if hitradius < 1.5 then
+								local el = TensorCore.entityList("name="..tostring(entity.name))
+								if valid(el) then for _,e in pairs(el) do
+									local hitrad = e.hitradius
+									if hitrad > hitradius then hitradius = hitrad end
+								end end
+							end return hitradius end)() else return false,false,0 end end)()
+							if (not friendly or (Settings.DrawHealingAoE or Settings.DrawFriendlyAoE)) and (not Data.LB[aoeID] or Settings.DrawFriendlyLB) then -- TODO: add logic to not draw if within range if healing or friendly
 
-									local pass = true
-									local small,large,isHealing
-									if friendly and (DrawHealing or DrawFriendly) then
-										if DrawHealing and table.contains(Settings.HealingAoeActions,aoeID) then
-											local party = MEntityList("myparty")
-											if id == p.id or (valid(party) and party[id]) then
-												if id == p.id then
-													if Settings.DrawHealingOutlineIfHealer then
-														small,large = {min=0,max=0},{min=0,max=0}
-														isHealing = true
-													else
-														small,large = alphafill.healing.small,alphafill.healing.large
-														isHealing = true
-													end
-												elseif (Distance3D(pos,ppos) + p.hitradius) > (aoe.aoeRadius or aoe.aoeLength) then
-													if Settings.DrawHealingOutOfRange then
-														small,large = alphafill.healing.small,alphafill.healing.large
-														isHealing = true
-													else pass = false end
-												elseif Settings.DrawHealingCirclesOutline then
+								local pass = true
+								local small,large,isHealing
+								if friendly and (Settings.DrawHealingAoE or Settings.DrawFriendlyAoE) then
+									if Settings.DrawHealingAoE and table.contains(Settings.HealingAoeActions,aoeID) then
+										local party = TensorCore.entityList("myparty")
+										if id == p.id or (valid(party) and party[id]) then
+											if id == p.id then
+												if Settings.DrawHealingOutlineIfHealer then
 													small,large = {min=0,max=0},{min=0,max=0}
 													isHealing = true
+												else
+													small,large = alphafill.healing.small,alphafill.healing.large
+													isHealing = true
+												end
+											elseif (Distance3D(pos,ppos) + p.hitradius) > (aoe.aoeRadius or aoe.aoeLength) then
+												if Settings.DrawHealingOutOfRange then
+													small,large = alphafill.healing.small,alphafill.healing.large
+													isHealing = true
 												else pass = false end
+											elseif Settings.DrawHealingCirclesOutline then
+												small,large = {min=0,max=0},{min=0,max=0}
+												isHealing = true
 											else pass = false end
-										elseif not table.contains(Settings.HealingAoeActions,aoeID) then
-											if table.contains(Data.LB,aoeID) then
-												if Settings.DrawFriendlyLB then
-													small,large = alphafill.friend.small,alphafill.friend.large
-												else pass = false end
-											elseif DrawFriendly then
+										else pass = false end
+									elseif not table.contains(Settings.HealingAoeActions,aoeID) then
+										if table.contains(Data.LB,aoeID) then
+											if Settings.DrawFriendlyLB then
 												small,large = alphafill.friend.small,alphafill.friend.large
-											else
-												pass = false
-											end
+											else pass = false end
+										elseif Settings.DrawFriendlyAoE then
+											small,large = alphafill.friend.small,alphafill.friend.large
 										else
 											pass = false
 										end
 									else
-										small,large = alphafill.enemy.small,alphafill.enemy.large
+										pass = false
 									end
+								else
+									small,large = alphafill.enemy.small,alphafill.enemy.large
+								end
 
-									if pass then
-										local casttime,channeltime,channeltargetid = (function() if valid(cinfo) then return cinfo.casttime,cinfo.channeltime,cinfo.channeltargetid else return 0,0,0 end end)()
-										local aoeCastType,Omen,Width = aoe.aoeCastType, aoe.aoeEffectInfo.aoeEffectName, tonumber(aoe.aoeWidth)
+								if pass then
+									local casttime,channeltime,channeltargetid = (function() if valid(cinfo) then return cinfo.casttime,cinfo.channeltime,cinfo.channeltargetid else return 0,0,0 end end)()
+									local aoeCastType,Omen,Width = aoe.aoeCastType, aoe.aoeEffectInfo.aoeEffectName, tonumber(aoe.aoeWidth)
 
-										preAllocExtra.entity = entity
-										preAllocExtra.pos = pos
-										preAllocExtra.friendly = friendly
-										preAllocExtra.isHealing = isHealing
-										preAllocExtra.small = small
-										preAllocExtra.large = large
-										preAllocExtra.largeAoE = Settings.largeAoE
-										preAllocExtra.hitradius = hitradius
-										preAllocExtra.fillCount = fillCount
-										preAllocExtra.maxFillCount = maxFillCount
-										preAllocExtra.verticesSpacing = Settings.verticesSpacing
-										preAllocExtra.maxSegments = Settings.maxSegments
-										preAllocExtra.casttime = casttime
-										preAllocExtra.channeltime = channeltime
-										preAllocExtra.channeltargetid = channeltargetid
-										preAllocExtra.smallEnemy = smallEnemy
-										preAllocExtra.largeEnemy = largeEnemy
-										preAllocExtra.smallHealing = smallHealing
-										preAllocExtra.largeHealing = largeHealing
-										preAllocExtra.smallFriend = smallFriend
-										preAllocExtra.largeFriend = largeFriend
-										preAllocExtra.enemyFill = enemyFill
-										preAllocExtra.healingFill = healingFill
-										preAllocExtra.friendFill = friendFill
-										preAllocExtra.outlineEnemy = outlineEnemy
-										preAllocExtra.outlineHealing = outlineHealing
-										preAllocExtra.outlineFriend = outlineFriend
-										preAllocExtra.outlineThicknessEnemy = outlineThicknessEnemy
-										preAllocExtra.outlineThicknessHealing = outlineThicknessHealing
-										preAllocExtra.outlineThicknessFriend = outlineThicknessFriend
+									preAllocExtra.entity = entity
+									preAllocExtra.pos = pos
+									preAllocExtra.friendly = friendly
+									preAllocExtra.isHealing = isHealing
+									preAllocExtra.small = small
+									preAllocExtra.large = large
+									preAllocExtra.largeAoE = Settings.largeAoE
+									preAllocExtra.hitradius = hitradius
+									preAllocExtra.fillCount = fillCount
+									preAllocExtra.maxFillCount = maxFillCount
+									preAllocExtra.verticesSpacing = Settings.verticesSpacing
+									preAllocExtra.maxSegments = Settings.maxSegments
+									preAllocExtra.casttime = casttime
+									preAllocExtra.channeltime = channeltime
+									preAllocExtra.channeltargetid = channeltargetid
+									preAllocExtra.smallEnemy = smallEnemy
+									preAllocExtra.largeEnemy = largeEnemy
+									preAllocExtra.smallHealing = smallHealing
+									preAllocExtra.largeHealing = largeHealing
+									preAllocExtra.smallFriend = smallFriend
+									preAllocExtra.largeFriend = largeFriend
+									preAllocExtra.enemyFill = enemyFill
+									preAllocExtra.healingFill = healingFill
+									preAllocExtra.friendFill = friendFill
+									preAllocExtra.outlineEnemy = outlineEnemy
+									preAllocExtra.outlineHealing = outlineHealing
+									preAllocExtra.outlineFriend = outlineFriend
+									preAllocExtra.outlineThicknessEnemy = outlineThicknessEnemy
+									preAllocExtra.outlineThicknessHealing = outlineThicknessHealing
+									preAllocExtra.outlineThicknessFriend = outlineThicknessFriend
 
 
 
-										if Width > 0 or aoeCastType == 11 then
-											if aoeCastType == 11 then -- Cross
-												fillCount = fillCount + 1
-												preAllocExtra.fillCount = fillCount
-												DrawCross( aoe, preAllocExtra )
-												if not self.Data.BlacklistRecorder[aoeID] then
-													if self.Data.Blacklistorder == nil then
-														self.Data.Blacklistorder = 1
-													else
-														self.Data.Blacklistorder = self.Data.Blacklistorder + 1
-													end
-													local timer = math.round(TensorReactions_CurrentTimer or 0,3) or 0
-													self.Data.BlacklistRecorder[aoeID] = {map=p.localmapid,timer=timer,type="cross",pos=self.Data.Blacklistorder}
+									if Width > 0 or aoeCastType == 11 then
+										if aoeCastType == 11 then -- Cross
+											fillCount = fillCount + 1
+											preAllocExtra.fillCount = fillCount
+											DrawCross( aoe, preAllocExtra )
+											if not Data.BlacklistRecorder[aoeID] then
+												if Data.Blacklistorder == nil then
+													Data.Blacklistorder = 1
+												else
+													Data.Blacklistorder = Data.Blacklistorder + 1
 												end
-											else -- Line
-												fillCount = fillCount + 1
-												preAllocExtra.fillCount = fillCount
-												DrawRect( aoe, preAllocExtra )
-												if not self.Data.BlacklistRecorder[aoeID] then
-													if self.Data.Blacklistorder == nil then
-														self.Data.Blacklistorder = 1
-													else
-														self.Data.Blacklistorder = self.Data.Blacklistorder + 1
-													end
-													local timer = math.round(TensorReactions_CurrentTimer or 0,3) or 0
-													self.Data.BlacklistRecorder[aoeID] = {map=p.localmapid,timer=timer,type="rectangle",pos=self.Data.Blacklistorder}
-												end
+												local timer = math.round(TensorReactions_CurrentTimer or 0,3) or 0
+												Data.BlacklistRecorder[aoeID] = {map=p.localmapid,timer=timer,type="cross",pos=Data.Blacklistorder}
 											end
-										else
-											local str = Omen:gsub("o",""):sub(6,-1) or ""
-											local OmenInfo = str:match("%D(%d+)%D") or ""
-											if #OmenInfo == 4 or str:match("don") or str:match("sircle") or aoeCastType == 10 then -- Donut
-												donut = true
-												fillCount = fillCount + 1
-												preAllocExtra.fillCount = fillCount
-												DrawDonut(aoe, preAllocExtra, tonumber(OmenInfo:sub(-2)) or 0 )
-												if not self.Data.BlacklistRecorder[aoeID] then
-													if self.Data.Blacklistorder == nil then
-														self.Data.Blacklistorder = 1
-													else
-														self.Data.Blacklistorder = self.Data.Blacklistorder + 1
-													end
-													local timer = math.round(TensorReactions_CurrentTimer or 0,3) or 0
-													self.Data.BlacklistRecorder[aoeID] = {map=p.localmapid,timer=timer,type="donut",pos=self.Data.Blacklistorder}
+										else -- Line
+											fillCount = fillCount + 1
+											preAllocExtra.fillCount = fillCount
+											DrawRect( aoe, preAllocExtra )
+											if not Data.BlacklistRecorder[aoeID] then
+												if Data.Blacklistorder == nil then
+													Data.Blacklistorder = 1
+												else
+													Data.Blacklistorder = Data.Blacklistorder + 1
 												end
-											elseif (#OmenInfo == 3 and not aoe.isAreaTarget) or str:match("fan") or is(aoeCastType,{3,13}) then -- Cone
-												local unknownCone = false
-												fillCount = fillCount + 1
-												preAllocExtra.fillCount = fillCount
-												DrawCone(aoe, preAllocExtra, (function() if (tonumber(OmenInfo) or 0) > 0 then return tonumber(OmenInfo) else if self.Settings.aoeIDUserSetCones[aoeID] ~= nil then return self.Settings.aoeIDUserSetCones[aoeID].angle else unknownCone = true if self.Data.reactionsUnknownConeAngle ~= nil and self.Data.reactionsUnknownConeAngleMap == p.localmapid then return self.Data.reactionsUnknownConeAngle else return UnknownConeAngle end end end end)() )
-												if not self.Data.BlacklistRecorder[aoeID] then
-													if self.Data.Blacklistorder == nil then
-														self.Data.Blacklistorder = 1
-													else
-														self.Data.Blacklistorder = self.Data.Blacklistorder + 1
-													end
-													local timer = math.round(TensorReactions_CurrentTimer or 0,3) or 0
-													self.Data.BlacklistRecorder[aoeID] = {map=p.localmapid,timer=timer,type="cone",unknownCone=unknownCone,pos=self.Data.Blacklistorder}
-												end
-											else
-												fillCount = fillCount + 1
-												preAllocExtra.fillCount = fillCount
-												DrawCircle( aoe, preAllocExtra )
-												if not self.Data.BlacklistRecorder[aoeID] then
-													if self.Data.Blacklistorder == nil then
-														self.Data.Blacklistorder = 1
-													else
-														self.Data.Blacklistorder = self.Data.Blacklistorder + 1
-													end
-													local timer = math.round(TensorReactions_CurrentTimer or 0,3) or 0
-													self.Data.BlacklistRecorder[aoeID] = {map=p.localmapid,timer=timer,type="circle",pos=self.Data.Blacklistorder}
-												end
+												local timer = math.round(TensorReactions_CurrentTimer or 0,3) or 0
+												Data.BlacklistRecorder[aoeID] = {map=p.localmapid,timer=timer,type="rectangle",pos=Data.Blacklistorder}
 											end
 										end
-
-
+									else
+										local str = Omen:gsub("o",""):sub(6,-1) or ""
+										local OmenInfo = str:match("%D(%d+)%D") or ""
+										if #OmenInfo == 4 or str:match("don") or str:match("sircle") or aoeCastType == 10 then -- Donut
+											donut = true
+											fillCount = fillCount + 1
+											preAllocExtra.fillCount = fillCount
+											DrawDonut(aoe, preAllocExtra, tonumber(OmenInfo:sub(-2)) or 0 )
+											if not Data.BlacklistRecorder[aoeID] then
+												if Data.Blacklistorder == nil then
+													Data.Blacklistorder = 1
+												else
+													Data.Blacklistorder = Data.Blacklistorder + 1
+												end
+												local timer = math.round(TensorReactions_CurrentTimer or 0,3) or 0
+												Data.BlacklistRecorder[aoeID] = {map=p.localmapid,timer=timer,type="donut",pos=Data.Blacklistorder}
+											end
+										elseif (#OmenInfo == 3 and not aoe.isAreaTarget) or str:match("fan") or is(aoeCastType,{3,13}) then -- Cone
+											local unknownCone = false
+											fillCount = fillCount + 1
+											preAllocExtra.fillCount = fillCount
+											DrawCone(aoe, preAllocExtra, (function() if (tonumber(OmenInfo) or 0) > 0 then return tonumber(OmenInfo) else if Settings.aoeIDUserSetCones[aoeID] ~= nil then return Settings.aoeIDUserSetCones[aoeID].angle else unknownCone = true if Data.reactionsUnknownConeAngle ~= nil and Data.reactionsUnknownConeAngleMap == p.localmapid then return Data.reactionsUnknownConeAngle else return UnknownConeAngle end end end end)() )
+											if not Data.BlacklistRecorder[aoeID] then
+												if Data.Blacklistorder == nil then
+													Data.Blacklistorder = 1
+												else
+													Data.Blacklistorder = Data.Blacklistorder + 1
+												end
+												local timer = math.round(TensorReactions_CurrentTimer or 0,3) or 0
+												Data.BlacklistRecorder[aoeID] = {map=p.localmapid,timer=timer,type="cone",unknownCone=unknownCone,pos=Data.Blacklistorder}
+											end
+										else
+											fillCount = fillCount + 1
+											preAllocExtra.fillCount = fillCount
+											DrawCircle( aoe, preAllocExtra )
+											if not Data.BlacklistRecorder[aoeID] then
+												if Data.Blacklistorder == nil then
+													Data.Blacklistorder = 1
+												else
+													Data.Blacklistorder = Data.Blacklistorder + 1
+												end
+												local timer = math.round(TensorReactions_CurrentTimer or 0,3) or 0
+												Data.BlacklistRecorder[aoeID] = {map=p.localmapid,timer=timer,type="circle",pos=Data.Blacklistorder}
+											end
+										end
 									end
 								end
-							else
-								Override[aoeID]() -- TODO: Override Logic
 							end
 						end
 					end
@@ -1708,7 +1701,7 @@ function self.Update()
 					end
 				end
 			end
-			if self.GUI.open ~= Settings.open then Settings.open = self.GUI.open end save()
+			if Gui.open ~= Settings.open then Settings.open = Gui.open end save()
 		end
 	elseif not FolderExists(ModulePath) then
 		-- Changing ModulePath to the current directory, in case the user renamed the folder --
@@ -1730,49 +1723,49 @@ function self.Update()
 		end
 		-- Changing ModulePath to the current directory, in case the user renamed the folder --
 	else
-		local defaultHealingAoeActions = table.deepcopy(self.Settings.HealingAoeActions) -- dirty way to update new healing actions
+		local defaultHealingAoeActions = table.deepcopy(Settings.HealingAoeActions) -- dirty way to update new healing actions
 		LoadSettings()
 		for _,id in pairs(defaultHealingAoeActions) do
-			if not table.contains(self.Settings.HealingAoeActions,id) then
-				table.insert(self.Settings.HealingAoeActions,id)
+			if not table.contains(Settings.HealingAoeActions,id) then
+				table.insert(Settings.HealingAoeActions,id)
 				save()
 			end
 		end
-		self.GUI.open = Settings.open
+		Gui.open = Settings.open
 		Data.loaded = true
 	end
 	--if #Data.DebugLog > Settings.DebugLogLimit then table.remove(Data.DebugLog,1) end
 end
 
 Argus.registerOnEntityCast(function(entityID, actionID)
-	local entity,action,data,settings = EntityList:Get(entityID),ActionList:Get(1,actionID),self.Data,self.Settings
+	local entity,action = TensorCore.mGetEntity(entityID),ActionList:Get(1,actionID)
 	if valid(entity) and entity.chartype ~= 4 and entity.chartype ~= 2 then
 		local action,name,heading,cinfo = ActionList:Get(1,actionID),entity.name or "", entity.pos.h or 0,entity.castinginfo
 		local Name,Range,Radius,AttackType,targets,targetstr = action.name or "",action.range or "",action.radius or "",action.attacktype or "",cinfo.castingtargets,""
 		if valid(targets) then for _,target in pairs(targets) do
-			local t = EntityList:Get(target)
+			local t = TensorCore.mGetEntity(target)
 			if valid(t) then
 				targetstr = targetstr..tostring(t.name)..","
 			else
 				targetstr = targetstr.."?????,"
 			end
 		end end
-		if self.Settings.DebugTypesEnabled[1] then
+		if Settings.DebugTypesEnabled[1] then
 			local reactionTimer = TensorReactions_CurrentTimer or 0
 			local tbl = {
-				line = (function() if self.Settings.DebugLog12Hour then return "["..os.date("%I:%M:%S %p").."] " else return "["..os.date("%H:%M:%S").."] " end end)() .. "TR time: " .. reactionTimer .. ", Casting: ["..entityID.."] "..name.." - "..Name.."["..actionID.."] on ["..tostring(targetstr).."] (Range: "..Range..", Radius: "..Radius..", Attack Type: "..AttackType..", Heading: "..heading..")",
+				line = (function() if Settings.DebugLog12Hour then return "["..os.date("%I:%M:%S %p").."] " else return "["..os.date("%H:%M:%S").."] " end end)() .. "TR time: " .. reactionTimer .. ", Casting: ["..entityID.."] "..name.." - "..Name.."["..actionID.."] on ["..tostring(targetstr).."] (Range: "..Range..", Radius: "..Radius..", Attack Type: "..AttackType..", Heading: "..heading..")",
 				type = 1
 			}
-			--table.insert(self.Data.DebugLog,tbl)
+			--table.insert(Data.DebugLog,tbl)
 			FileWrite(DebugOutput,"[Casting] "..tbl.line.."\n", true)
 		end
 
 	end
-	if settings.MarkPlayers and settings.MarkingActions[actionID] and valid(entity) then
+	if Settings.MarkPlayers and Settings.MarkingActions[actionID] and valid(entity) then
 		local ct = entity.castinginfo.castingtargets
 		if valid(ct) then
 			for _,tid in pairs(ct) do
-				local target = EntityList:Get(tid)
+				local target = TensorCore.mGetEntity(tid)
 				if valid(target) then
 					local name = target.name
 					--d("["..actionID.."] "..tostring((action or {}).name).." is being casted on ["..tid.."] "..name)
@@ -1791,32 +1784,33 @@ Argus.registerOnEntityCast(function(entityID, actionID)
 end)
 
 Argus.registerOnEntityChannel(function(entityID, channelID, targetID, channelTimeMax)
-	local entity,target = EntityList:Get(entityID),EntityList:Get(targetID)
+	local entity,target = TensorCore.mGetEntity(entityID),TensorCore.mGetEntity(targetID)
 	if valid(entity) and entity.chartype ~= 4 and entity.chartype ~= 2 then
 		local action,name,heading = ActionList:Get(1,channelID),entity.name or "", entity.pos.h or 0
 		local Name,Range,Radius,AttackType = action.name or "",action.range or "",action.radius or "",action.attacktype or ""
 		local targetName = (function() if valid(target) then return target.name else return targetID end end)()
-		if self.Settings.DebugTypesEnabled[2] then
+		if Settings.DebugTypesEnabled[2] then
 			local reactionTimer = TensorReactions_CurrentTimer or 0
 			local tbl = {
-				line = (function() if self.Settings.DebugLog12Hour then return "["..os.date("%I:%M:%S %p").."] " else return "["..os.date("%H:%M:%S").."] " end end)().."TR time: " .. reactionTimer .. ", Channeling: ["..entityID.."] "..name.." - "..Name.."["..channelID.."] on ["..targetName.."] (Range: "..Range..", Radius: "..Radius..", Attack Type: "..AttackType..", Heading: "..heading..")",
+				line = (function() if Settings.DebugLog12Hour then return "["..os.date("%I:%M:%S %p").."] " else return "["..os.date("%H:%M:%S").."] " end end)().."TR time: " .. reactionTimer .. ", Channeling: ["..entityID.."] "..name.." - "..Name.."["..channelID.."] on ["..targetName.."] (Range: "..Range..", Radius: "..Radius..", Attack Type: "..AttackType..", Heading: "..heading..")",
 				type = 2
 			}
-			--table.insert(self.Data.DebugLog,tbl)
+			--table.insert(Data.DebugLog,tbl)
 			FileWrite(DebugOutput,"[Channeling] "..tbl.line.."\n", true)
 		end
-	end end)
+	end 
+end)
 
 Argus.registerOnMarkerAdd(function(entityID, markerType) --d("["..tostring(entityID).."] "..tostring(markerType))
-	local entity,Data,Settings = EntityList:Get(entityID),self.Data,self.Settings
+	local entity = TensorCore.mGetEntity(entityID)
 	if valid(entity) then
 		if Settings.DebugTypesEnabled[3] then
 			local reactionTimer = TensorReactions_CurrentTimer or 0
 			local tbl = {
-				line = (function() if self.Settings.DebugLog12Hour then return "["..os.date("%I:%M:%S %p").."] " else return "["..os.date("%H:%M:%S").."] " end end)().."TR time: " .. reactionTimer .. ", Marker: ["..entityID.."] "..entity.name..", marked with: ["..markerType.."] "..tostring(self.Data.HeadMarker[markerType]),
+				line = (function() if Settings.DebugLog12Hour then return "["..os.date("%I:%M:%S %p").."] " else return "["..os.date("%H:%M:%S").."] " end end)().."TR time: " .. reactionTimer .. ", Marker: ["..entityID.."] "..entity.name..", marked with: ["..markerType.."] "..tostring(Data.HeadMarker[markerType]),
 				type = 3
 			}
-			--table.insert(self.Data.DebugLog,tbl)
+			--table.insert(Data.DebugLog,tbl)
 			FileWrite(DebugOutput,"[Marker] "..tbl.line.."\n", true)
 		end
 
@@ -1844,7 +1838,7 @@ end
 
 function self.avoidanceCallback(aoe)
 	if aoe == nil then return false end
-	local ent = EntityList:Get(aoe.entityID)
+	local ent = TensorCore.mGetEntity(aoe.entityID)
 	if ent then
 		return not TensorCore.isFriendly(ent)
 	end
@@ -1954,17 +1948,17 @@ function self.ColorEditor(id,r,g,b,a)
 end
 
 function self.Draw()
-	local p,Gui,Settings,Data,Style = TensorCore.mGetPlayer(),self.GUI,self.Settings,self.Data,GUI:GetStyle()
+	local p,Gui,Style = TensorCore.mGetPlayer(),self.GUI,GUI:GetStyle()
 	local windowPadding = Style.windowpadding
 	local winX,winY,posX,posY
-	if self.GUI.open then
+	if Gui.open then
 		local c = 0
 		GUI:SetNextWindowSize(530,175,GUI.SetCond_FirstUseEver)
 		GUI:SetNextWindowPosCenter(GUI.SetCond_FirstUseEver)
 		for k,v in pairs(WindowStyle) do if v[4] ~= 0 then c = c + 1 loadstring([[GUI:PushStyleColor(GUI.Col_]]..k..[[, ]]..(v[1]/255)..[[, ]]..(v[2]/255)..[[, ]]..(v[3]/255)..[[, ]]..v[4]..[[)]])() end end
-		self.GUI.visible, self.GUI.open = GUI:Begin(Gui.name.." - v"..self.Info.Version.."##MainWindow###"..Gui.name, self.GUI.open)
-		if self.GUI.visible then
-			local tabindex, tabname = GUI_DrawTabs(self.GUI.main_tabs)
+		Gui.visible, Gui.open = GUI:Begin(Gui.name.." - v"..self.Info.Version.."##MainWindow###"..Gui.name, Gui.open)
+		if Gui.visible then
+			local tabindex, tabname = GUI_DrawTabs(Gui.main_tabs)
 			if (tabname == GetString("Telegraphs")) then
 				Settings.enable = GUI:Checkbox(GetString("Enable").." / "..GetString("Disable"),Settings.enable) GUI:SameLine(0,25)
 
@@ -2046,61 +2040,61 @@ function self.Draw()
 					--local r,g,b,changed = GUI:ColorEdit3("Start##EnemyColorTelegraphs",enemyFill.start.r/255, enemyFill.start.g/255, enemyFill.start.b/255)
 					local r,g,b,changed = self.ColorEditor(GetString("Start").."##EnemyColorTelegraphs",enemyFill.start.r/255, enemyFill.start.g/255, enemyFill.start.b/255)
 					if (changed) then
-						self.Data.lastColorChange = Now()
-						self.Data.lastColorRGB = {r=r,g=g,b=b}
-						self.Data.lastLineRGB = {r=r,g=g,b=b}
+						Data.lastColorChange = Now()
+						Data.lastColorRGB = {r=r,g=g,b=b}
+						Data.lastLineRGB = {r=r,g=g,b=b}
 						Settings.fillRGB.enemy.start = {r=r*255,g=g*255,b=b*255}
-						self.Data.lastColorAlpha = Settings.alphafill.enemy.small.max save(true)
+						Data.lastColorAlpha = Settings.alphafill.enemy.small.max save(true)
 					end
 					if GUI:IsItemClicked() then
-						self.Data.lastColorChange = Now()
-						self.Data.lastColorRGB = {r=r,g=g,b=b}
-						self.Data.lastLineRGB = {r=r,g=g,b=b}
-						self.Data.lastColorAlpha = Settings.alphafill.enemy.small.max
+						Data.lastColorChange = Now()
+						Data.lastColorRGB = {r=r,g=g,b=b}
+						Data.lastLineRGB = {r=r,g=g,b=b}
+						Data.lastColorAlpha = Settings.alphafill.enemy.small.max
 					end GUI:SameLine(0,15)
 
 					GUI:ColorEditMode(ColorEditModeFlags)
 					--local r,g,b,changed = GUI:ColorEdit3("Mid##EnemyColorTelegraphs",enemyFill.mid.r/255, enemyFill.mid.g/255, enemyFill.mid.b/255)
 					local r,g,b,changed = self.ColorEditor(GetString("Mid").."##EnemyColorTelegraphs",enemyFill.mid.r/255, enemyFill.mid.g/255, enemyFill.mid.b/255)
 					if (changed) then
-						self.Data.lastColorChange = Now()
-						self.Data.lastColorRGB = {r=r,g=g,b=b}
-						self.Data.lastLineRGB = {r=r,g=g,b=b}
+						Data.lastColorChange = Now()
+						Data.lastColorRGB = {r=r,g=g,b=b}
+						Data.lastLineRGB = {r=r,g=g,b=b}
 						Settings.fillRGB.enemy.mid = {r=r*255,g=g*255,b=b*255}
-						self.Data.lastColorAlpha = Settings.alphafill.enemy.small.max save(true)
+						Data.lastColorAlpha = Settings.alphafill.enemy.small.max save(true)
 					end
 					if GUI:IsItemClicked() then
-						self.Data.lastColorChange = Now()
-						self.Data.lastColorRGB = {r=r,g=g,b=b}
-						self.Data.lastLineRGB = {r=r,g=g,b=b}
-						self.Data.lastColorAlpha = Settings.alphafill.enemy.small.max
+						Data.lastColorChange = Now()
+						Data.lastColorRGB = {r=r,g=g,b=b}
+						Data.lastLineRGB = {r=r,g=g,b=b}
+						Data.lastColorAlpha = Settings.alphafill.enemy.small.max
 					end GUI:SameLine(0,15)
 
 					GUI:ColorEditMode(ColorEditModeFlags)
 					--local r,g,b,changed = GUI:ColorEdit3("Finish##EnemyColorTelegraphs",enemyFill.finish.r/255, enemyFill.finish.g/255, enemyFill.finish.b/255)
 					local r,g,b,changed = self.ColorEditor(GetString("Finish").."##EnemyColorTelegraphs",enemyFill.finish.r/255, enemyFill.finish.g/255, enemyFill.finish.b/255)
 					if (changed) then
-						self.Data.lastColorChange = Now()
-						self.Data.lastColorRGB = {r=r,g=g,b=b}
-						self.Data.lastLineRGB = {r=r,g=g,b=b}
+						Data.lastColorChange = Now()
+						Data.lastColorRGB = {r=r,g=g,b=b}
+						Data.lastLineRGB = {r=r,g=g,b=b}
 						Settings.fillRGB.enemy.finish = {r=r*255,g=g*255,b=b*255}
-						self.Data.lastColorAlpha = Settings.alphafill.enemy.small.max save(true)
+						Data.lastColorAlpha = Settings.alphafill.enemy.small.max save(true)
 					end
 					if GUI:IsItemClicked() then
-						self.Data.lastColorChange = Now()
-						self.Data.lastColorRGB = {r=r,g=g,b=b}
-						self.Data.lastLineRGB = {r=r,g=g,b=b}
-						self.Data.lastColorAlpha = Settings.alphafill.enemy.small.max
+						Data.lastColorChange = Now()
+						Data.lastColorRGB = {r=r,g=g,b=b}
+						Data.lastLineRGB = {r=r,g=g,b=b}
+						Data.lastColorAlpha = Settings.alphafill.enemy.small.max
 					end GUI:SameLine(0,15)
 					GUI:Text(GetString("Line")..": ") GUI:SameLine(0,0) GUI:PushItemWidth(-1)
 					local val,changed = GUI:SliderFloat("##OutlineThicknessEnemy",outlineThicknessEnemy,1,10)
 					if val ~= outlineThicknessEnemy then d(val)
-						self.Data.lastColorChange = Now()
-						self.Data.lastColorRGB = {r=r,g=g,b=b}
-						self.Data.lastLineRGB = {r=r2,g=g2,b=b2,a=a2}
-						self.Data.lastColorAlpha = Settings.alphafill.enemy.small.max
+						Data.lastColorChange = Now()
+						Data.lastColorRGB = {r=r,g=g,b=b}
+						Data.lastLineRGB = {r=r2,g=g2,b=b2,a=a2}
+						Data.lastColorAlpha = Settings.alphafill.enemy.small.max
 						Settings.outlineThickness.enemy = val
-						self.Data.lastLineThickness = val save(true)
+						Data.lastLineThickness = val save(true)
 					end GUI:PopItemWidth()
 
 					GUI:Text(GetString("Telegraph Fill Alpha Settings:"))
@@ -2117,19 +2111,19 @@ function self.Draw()
 					local val,changed = GUI:SliderInt("##smallTelegraphsMin",smallEnemy.min*100,1,100,"%i%%")
 					if changed then
 						smallEnemy.min = val / 100
-						self.Data.lastColorChange = Now()
-						self.Data.lastColorRGB = {r=r,g=g,b=b}
-						self.Data.lastLineRGB = Settings.outlineRGB.enemy
-						self.Data.lastColorAlpha = val / 100
+						Data.lastColorChange = Now()
+						Data.lastColorRGB = {r=r,g=g,b=b}
+						Data.lastLineRGB = Settings.outlineRGB.enemy
+						Data.lastColorAlpha = val / 100
 					end GUI:SameLine(0,15)
 					GUI:Text(GetString("Max")..": ") GUI:SameLine(0,0)
 					local val2,changed2 = GUI:SliderInt("##smallTelegraphsMax",smallEnemy.max*100,1,100,"%i%%")
 					if changed2 then
 						smallEnemy.max = val2 / 100
-						self.Data.lastColorChange = Now()
-						self.Data.lastColorRGB = {r=r,g=g,b=b}
-						self.Data.lastLineRGB = Settings.outlineRGB.enemy
-						self.Data.lastColorAlpha = val2 / 100
+						Data.lastColorChange = Now()
+						Data.lastColorRGB = {r=r,g=g,b=b}
+						Data.lastLineRGB = Settings.outlineRGB.enemy
+						Data.lastColorAlpha = val2 / 100
 					end
 					GUI:PopItemWidth()
 					GUI:EndChild()
@@ -2147,19 +2141,19 @@ function self.Draw()
 					local val,changed = GUI:SliderInt("##LargeTelegraphsMin",largeEnemy.min*100,1,100,"%i%%")
 					if changed then
 						largeEnemy.min = val / 100
-						self.Data.lastColorChange = Now()
-						self.Data.lastColorRGB = {r=r,g=g,b=b}
-						self.Data.lastLineRGB = Settings.outlineRGB.enemy
-						self.Data.lastColorAlpha = val / 100
+						Data.lastColorChange = Now()
+						Data.lastColorRGB = {r=r,g=g,b=b}
+						Data.lastLineRGB = Settings.outlineRGB.enemy
+						Data.lastColorAlpha = val / 100
 					end GUI:SameLine(0,15)
 					GUI:Text(GetString("Max")..": ") GUI:SameLine(0,0)
 					local val2,changed2 = GUI:SliderInt("##LargeTelegraphsMax",largeEnemy.max*100,1,100,"%i%%")
 					if changed2 then
 						largeEnemy.max = val2 / 100
-						self.Data.lastColorChange = Now()
-						self.Data.lastColorRGB = {r=r,g=g,b=b}
-						self.Data.lastLineRGB = Settings.outlineRGB.enemy
-						self.Data.lastColorAlpha = val2 / 100
+						Data.lastColorChange = Now()
+						Data.lastColorRGB = {r=r,g=g,b=b}
+						Data.lastLineRGB = Settings.outlineRGB.enemy
+						Data.lastColorAlpha = val2 / 100
 					end
 					GUI:PopItemWidth()
 					GUI:EndChild()
@@ -2184,43 +2178,43 @@ function self.Draw()
 					--local r,g,b,changed = GUI:ColorEdit3("Healing Color##HealingColorTelegraphs",healingFill.r, healingFill.g, healingFill.b)
 					local r,g,b,changed = self.ColorEditor(GetString("Healing").." "..GetString("Color").."##HealingColorTelegraphs",healingFill.r, healingFill.g, healingFill.b)
 					if (changed) then
-						self.Data.lastColorChange = Now()
-						self.Data.lastColorRGB = {r=r,g=g,b=b}
-						self.Data.lastLineRGB = Settings.outlineRGB.healing
+						Data.lastColorChange = Now()
+						Data.lastColorRGB = {r=r,g=g,b=b}
+						Data.lastLineRGB = Settings.outlineRGB.healing
 						Settings.fillRGB.healing = {r=r,g=g,b=b}
-						self.Data.lastColorAlpha = Settings.alphafill.healing.small.max save(true)
+						Data.lastColorAlpha = Settings.alphafill.healing.small.max save(true)
 					end
 					if GUI:IsItemClicked() then
-						self.Data.lastColorChange = Now()
-						self.Data.lastColorRGB = {r=r,g=g,b=b}
-						self.Data.lastLineRGB = Settings.outlineRGB.healing
-						self.Data.lastColorAlpha = Settings.alphafill.healing.small.max
+						Data.lastColorChange = Now()
+						Data.lastColorRGB = {r=r,g=g,b=b}
+						Data.lastLineRGB = Settings.outlineRGB.healing
+						Data.lastColorAlpha = Settings.alphafill.healing.small.max
 					end GUI:SameLine(0,15)
 					GUI:ColorEditMode(ColorEditModeFlags)
 					--local r2,g2,b2,a2,changed2 = GUI:ColorEdit4("Outline Color##HealingColorTelegraphs",outlineHealing.r, outlineHealing.g, outlineHealing.b, outlineHealing.a)
 					local r2,g2,b2,a2,changed2 = self.ColorEditor(GetString("Outline").." "..GetString("Color").."##HealingColorTelegraphs",outlineHealing.r, outlineHealing.g, outlineHealing.b, outlineHealing.a)
 					if (changed2) then
-						self.Data.lastColorChange = Now()
-						self.Data.lastColorRGB = {r=r,g=g,b=b}
-						self.Data.lastLineRGB = {r=r2,g=g2,b=b2,a=a2}
+						Data.lastColorChange = Now()
+						Data.lastColorRGB = {r=r,g=g,b=b}
+						Data.lastLineRGB = {r=r2,g=g2,b=b2,a=a2}
 						Settings.outlineRGB.healing = {r=r2,g=g2,b=b2,a=a2}
-						self.Data.lastColorAlpha = Settings.alphafill.healing.small.max save(true)
+						Data.lastColorAlpha = Settings.alphafill.healing.small.max save(true)
 					end
 					if GUI:IsItemClicked() then
-						self.Data.lastColorChange = Now()
-						self.Data.lastColorRGB = {r=r,g=g,b=b}
-						self.Data.lastLineRGB = {r=r2,g=g2,b=b2,a=a2}
-						self.Data.lastColorAlpha = Settings.alphafill.healing.small.max
+						Data.lastColorChange = Now()
+						Data.lastColorRGB = {r=r,g=g,b=b}
+						Data.lastLineRGB = {r=r2,g=g2,b=b2,a=a2}
+						Data.lastColorAlpha = Settings.alphafill.healing.small.max
 					end GUI:SameLine(0,15)
 					GUI:Text(GetString("Line").." "..GetString("Size")..": ") GUI:SameLine(0,0) GUI:PushItemWidth(-1)
 					local val,changed = GUI:SliderFloat("##OutlineThicknessHealing",outlineThicknessHealing,1,10)
 					if changed then
-						self.Data.lastColorChange = Now()
-						self.Data.lastColorRGB = {r=r,g=g,b=b}
-						self.Data.lastLineRGB = {r=r2,g=g2,b=b2,a=a2}
-						self.Data.lastColorAlpha = Settings.alphafill.healing.small.max
+						Data.lastColorChange = Now()
+						Data.lastColorRGB = {r=r,g=g,b=b}
+						Data.lastLineRGB = {r=r2,g=g2,b=b2,a=a2}
+						Data.lastColorAlpha = Settings.alphafill.healing.small.max
 						Settings.outlineThickness.healing = val
-						self.Data.lastLineThickness = val save(true)
+						Data.lastLineThickness = val save(true)
 					end GUI:PopItemWidth()
 
 					GUI:Text(GetString("Telegraph Fill Alpha Settings:"))
@@ -2237,19 +2231,19 @@ function self.Draw()
 					local val,changed = GUI:SliderInt("##smallTelegraphsMin",smallHealing.min*100,1,100,"%i%%")
 					if changed then
 						smallHealing.min = val / 100
-						self.Data.lastColorChange = Now()
-						self.Data.lastColorRGB = {r=r,g=g,b=b}
-						self.Data.lastLineRGB = Settings.outlineRGB.healing
-						self.Data.lastColorAlpha = val / 100
+						Data.lastColorChange = Now()
+						Data.lastColorRGB = {r=r,g=g,b=b}
+						Data.lastLineRGB = Settings.outlineRGB.healing
+						Data.lastColorAlpha = val / 100
 					end GUI:SameLine(0,15)
 					GUI:Text(GetString("Max")..": ") GUI:SameLine(0,0)
 					local val2,changed2 = GUI:SliderInt("##smallTelegraphsMax",smallHealing.max*100,1,100,"%i%%")
 					if changed2 then
 						smallHealing.max = val2 / 100
-						self.Data.lastColorChange = Now()
-						self.Data.lastColorRGB = {r=r,g=g,b=b}
-						self.Data.lastLineRGB = Settings.outlineRGB.healing
-						self.Data.lastColorAlpha = val2 / 100
+						Data.lastColorChange = Now()
+						Data.lastColorRGB = {r=r,g=g,b=b}
+						Data.lastLineRGB = Settings.outlineRGB.healing
+						Data.lastColorAlpha = val2 / 100
 					end
 					GUI:PopItemWidth()
 					GUI:EndChild()
@@ -2267,19 +2261,19 @@ function self.Draw()
 					local val,changed = GUI:SliderInt("##LargeTelegraphsMin",largeHealing.min*100,1,100,"%i%%")
 					if changed then
 						largeHealing.min = val / 100
-						self.Data.lastColorChange = Now()
-						self.Data.lastColorRGB = {r=r,g=g,b=b}
-						self.Data.lastLineRGB = Settings.outlineRGB.healing
-						self.Data.lastColorAlpha = val / 100
+						Data.lastColorChange = Now()
+						Data.lastColorRGB = {r=r,g=g,b=b}
+						Data.lastLineRGB = Settings.outlineRGB.healing
+						Data.lastColorAlpha = val / 100
 					end GUI:SameLine(0,15)
 					GUI:Text(GetString("Max")..": ") GUI:SameLine(0,0)
 					local val2,changed2 = GUI:SliderInt("##LargeTelegraphsMax",largeHealing.max*100,1,100,"%i%%")
 					if changed2 then
 						largeHealing.max = val2 / 100
-						self.Data.lastColorChange = Now()
-						self.Data.lastColorRGB = {r=r,g=g,b=b}
-						self.Data.lastLineRGB = Settings.outlineRGB.healing
-						self.Data.lastColorAlpha = val2 / 100
+						Data.lastColorChange = Now()
+						Data.lastColorRGB = {r=r,g=g,b=b}
+						Data.lastLineRGB = Settings.outlineRGB.healing
+						Data.lastColorAlpha = val2 / 100
 					end
 					GUI:PopItemWidth()
 					GUI:EndChild()
@@ -2339,43 +2333,43 @@ function self.Draw()
 					--local r,g,b,changed = GUI:ColorEdit3("Friendly Color##FriendlyColorTelegraphs",friendFill.r, friendFill.g, friendFill.b)
 					local r,g,b,changed = self.ColorEditor("Friendly Color##FriendlyColorTelegraphs",friendFill.r, friendFill.g, friendFill.b)
 					if (changed) then
-						self.Data.lastColorChange = Now()
-						self.Data.lastColorRGB = {r=r,g=g,b=b}
-						self.Data.lastLineRGB = Settings.outlineRGB.friend
+						Data.lastColorChange = Now()
+						Data.lastColorRGB = {r=r,g=g,b=b}
+						Data.lastLineRGB = Settings.outlineRGB.friend
 						Settings.fillRGB.friend = {r=r,g=g,b=b}
-						self.Data.lastColorAlpha = Settings.alphafill.friend.small.max save(true)
+						Data.lastColorAlpha = Settings.alphafill.friend.small.max save(true)
 					end
 					if GUI:IsItemClicked() then
-						self.Data.lastColorChange = Now()
-						self.Data.lastColorRGB = {r=r,g=g,b=b}
-						self.Data.lastLineRGB = Settings.outlineRGB.friend
-						self.Data.lastColorAlpha = Settings.alphafill.friend.small.max
+						Data.lastColorChange = Now()
+						Data.lastColorRGB = {r=r,g=g,b=b}
+						Data.lastLineRGB = Settings.outlineRGB.friend
+						Data.lastColorAlpha = Settings.alphafill.friend.small.max
 					end GUI:SameLine(0,15)
 					GUI:ColorEditMode(ColorEditModeFlags)
 					--local r2,g2,b2,a2,changed2 = GUI:ColorEdit4("Outline Color##FriendColorTelegraphs",outlineFriend.r, outlineFriend.g, outlineFriend.b, outlineFriend.a)
 					local r2,g2,b2,a2,changed2 = self.ColorEditor("Outline Color##FriendColorTelegraphs",outlineFriend.r, outlineFriend.g, outlineFriend.b, outlineFriend.a)
 					if (changed2) then
-						self.Data.lastColorChange = Now()
-						self.Data.lastColorRGB = {r=r,g=g,b=b}
-						self.Data.lastLineRGB = {r=r2,g=g2,b=b2,a=a2}
+						Data.lastColorChange = Now()
+						Data.lastColorRGB = {r=r,g=g,b=b}
+						Data.lastLineRGB = {r=r2,g=g2,b=b2,a=a2}
 						Settings.outlineRGB.friend = {r=r2,g=g2,b=b2,a=a2}
-						self.Data.lastColorAlpha = Settings.alphafill.friend.small.max save(true)
+						Data.lastColorAlpha = Settings.alphafill.friend.small.max save(true)
 					end
 					if GUI:IsItemClicked() then
-						self.Data.lastColorChange = Now()
-						self.Data.lastColorRGB = {r=r,g=g,b=b}
-						self.Data.lastLineRGB = {r=r2,g=g2,b=b2,a=a2}
-						self.Data.lastColorAlpha = Settings.alphafill.friend.small.max
+						Data.lastColorChange = Now()
+						Data.lastColorRGB = {r=r,g=g,b=b}
+						Data.lastLineRGB = {r=r2,g=g2,b=b2,a=a2}
+						Data.lastColorAlpha = Settings.alphafill.friend.small.max
 					end GUI:SameLine(0,15)
 					GUI:Text(GetString("Line Size: ")) GUI:SameLine(0,0) GUI:PushItemWidth(-1)
 					local val,changed = GUI:SliderFloat("##OutlineThicknessFriend",outlineThicknessFriend,1,10)
 					if changed then
-						self.Data.lastColorChange = Now()
-						self.Data.lastColorRGB = {r=r,g=g,b=b}
-						self.Data.lastLineRGB = {r=r2,g=g2,b=b2,a=a2}
-						self.Data.lastColorAlpha = Settings.alphafill.friend.small.max
+						Data.lastColorChange = Now()
+						Data.lastColorRGB = {r=r,g=g,b=b}
+						Data.lastLineRGB = {r=r2,g=g2,b=b2,a=a2}
+						Data.lastColorAlpha = Settings.alphafill.friend.small.max
 						Settings.outlineThickness.friend = val
-						self.Data.lastLineThickness = val save(true)
+						Data.lastLineThickness = val save(true)
 					end GUI:PopItemWidth()
 
 					GUI:Text(GetString("Telegraph Fill Alpha Settings:"))
@@ -2392,19 +2386,19 @@ function self.Draw()
 					local val,changed = GUI:SliderInt("##smallTelegraphsMin",smallFriend.min*100,1,100,"%i%%")
 					if changed then
 						smallFriend.min = val / 100
-						self.Data.lastColorChange = Now()
-						self.Data.lastColorRGB = {r=r,g=g,b=b}
-						self.Data.lastLineRGB = Settings.outlineRGB.friend
-						self.Data.lastColorAlpha = val / 100
+						Data.lastColorChange = Now()
+						Data.lastColorRGB = {r=r,g=g,b=b}
+						Data.lastLineRGB = Settings.outlineRGB.friend
+						Data.lastColorAlpha = val / 100
 					end GUI:SameLine(0,15)
 					GUI:Text(GetString("Max: ")) GUI:SameLine(0,0)
 					local val2,changed2 = GUI:SliderInt("##smallTelegraphsMax",smallFriend.max*100,1,100,"%i%%")
 					if changed2 then
 						smallFriend.max = val2 / 100
-						self.Data.lastColorChange = Now()
-						self.Data.lastColorRGB = {r=r,g=g,b=b}
-						self.Data.lastLineRGB = Settings.outlineRGB.friend
-						self.Data.lastColorAlpha = val2 / 100
+						Data.lastColorChange = Now()
+						Data.lastColorRGB = {r=r,g=g,b=b}
+						Data.lastLineRGB = Settings.outlineRGB.friend
+						Data.lastColorAlpha = val2 / 100
 					end
 					GUI:PopItemWidth()
 					GUI:EndChild()
@@ -2421,19 +2415,19 @@ function self.Draw()
 					local val,changed = GUI:SliderInt("##LargeTelegraphsMin",largeFriend.min*100,1,100,"%i%%")
 					if changed then
 						largeFriend.min = val / 100
-						self.Data.lastColorChange = Now()
-						self.Data.lastColorRGB = {r=r,g=g,b=b}
-						self.Data.lastLineRGB = Settings.outlineRGB.friend
-						self.Data.lastColorAlpha = val / 100
+						Data.lastColorChange = Now()
+						Data.lastColorRGB = {r=r,g=g,b=b}
+						Data.lastLineRGB = Settings.outlineRGB.friend
+						Data.lastColorAlpha = val / 100
 					end GUI:SameLine(0,15)
 					GUI:Text(GetString("Max: ")) GUI:SameLine(0,0)
 					local val2,changed2 = GUI:SliderInt("##LargeTelegraphsMax",largeFriend.max*100,1,100,"%i%%")
 					if changed2 then
 						largeFriend.max = val2 / 100
-						self.Data.lastColorChange = Now()
-						self.Data.lastColorRGB = {r=r,g=g,b=b}
-						self.Data.lastLineRGB = Settings.outlineRGB.friend
-						self.Data.lastColorAlpha = val2 / 100
+						Data.lastColorChange = Now()
+						Data.lastColorRGB = {r=r,g=g,b=b}
+						Data.lastLineRGB = Settings.outlineRGB.friend
+						Data.lastColorAlpha = val2 / 100
 					end
 					GUI:PopItemWidth()
 					GUI:EndChild()
@@ -2475,38 +2469,38 @@ function self.Draw()
 					--local r,g,b,a,changed = GUI:ColorEdit4("Attack Range (Inside) Color##AttackRange",outlineRangeInside.r, outlineRangeInside.g, outlineRangeInside.b, outlineRangeInside.a)
 					local r,g,b,a,changed = self.ColorEditor("Attack Range (Inside) Color##AttackRange",outlineRangeInside.r, outlineRangeInside.g, outlineRangeInside.b, outlineRangeInside.a)
 					if (changed) then
-						self.Data.lastColorChange = Now()
-						self.Data.lastLineRGB = {r=r,g=g,b=b,a=a}
+						Data.lastColorChange = Now()
+						Data.lastLineRGB = {r=r,g=g,b=b,a=a}
 						Settings.outlineRGB.rangeInside = {r=r,g=g,b=b,a=a}
-						self.Data.lastColorAlpha = 0 save(true)
+						Data.lastColorAlpha = 0 save(true)
 					end
 					if GUI:IsItemClicked() then
-						self.Data.lastColorChange = Now()
-						self.Data.lastLineRGB = {r=r,g=g,b=b,a=a}
-						self.Data.lastColorAlpha = 0
+						Data.lastColorChange = Now()
+						Data.lastLineRGB = {r=r,g=g,b=b,a=a}
+						Data.lastColorAlpha = 0
 					end
 					--local r,g,b,a,changed = GUI:ColorEdit4("Attack Range (Outside) Color##AttackRange",outlineRangeOutside.r, outlineRangeOutside.g, outlineRangeOutside.b, outlineRangeOutside.a)
 					local r,g,b,a,changed = self.ColorEditor("Attack Range (Outside) Color##AttackRange",outlineRangeOutside.r, outlineRangeOutside.g, outlineRangeOutside.b, outlineRangeOutside.a)
 					if (changed) then
-						self.Data.lastColorChange = Now()
-						self.Data.lastLineRGB = {r=r,g=g,b=b,a=a}
+						Data.lastColorChange = Now()
+						Data.lastLineRGB = {r=r,g=g,b=b,a=a}
 						Settings.outlineRGB.rangeOutside = {r=r,g=g,b=b,a=a}
-						self.Data.lastColorAlpha = 0 save(true)
+						Data.lastColorAlpha = 0 save(true)
 					end
 					if GUI:IsItemClicked() then
-						self.Data.lastColorChange = Now()
-						self.Data.lastLineRGB = {r=r,g=g,b=b,a=a}
-						self.Data.lastColorAlpha = 0
+						Data.lastColorChange = Now()
+						Data.lastLineRGB = {r=r,g=g,b=b,a=a}
+						Data.lastColorAlpha = 0
 					end
 					GUI:AlignFirstTextHeightToWidgets()
 					GUI:Text(GetString("Line Size: ")) GUI:SameLine(0,0) GUI:PushItemWidth(100)
 					local val,changed = GUI:SliderFloat("##OutlineThicknessAttackRange",outlineThicknessRange,1,10)
 					if changed then
-						self.Data.lastColorChange = Now()
-						self.Data.lastLineRGB = {r=r,g=g,b=b,a=a}
-						self.Data.lastColorAlpha = 0
+						Data.lastColorChange = Now()
+						Data.lastLineRGB = {r=r,g=g,b=b,a=a}
+						Data.lastColorAlpha = 0
 						Settings.outlineThickness.range = val
-						self.Data.lastLineThickness = val save(true)
+						Data.lastLineThickness = val save(true)
 					end GUI:PopItemWidth()
 					local checked,changed = GUI:Checkbox("Always Show Attack Range",Settings.AlwaysShowAttackRange)
 					if changed then
@@ -2584,13 +2578,13 @@ function self.Draw()
 				--GUI:SameLine(0,15)
 				--local r,g,b,changed = GUI:ColorPicker3("##FriendlyColorTelegraphs",friend.r, friend.g, friend.b)
 				--if (changed) then
-				--	self.Data.lastColorChange = Now()
-				--	self.Data.lastColorRGB = {r=r,g=g,b=b}
+				--	Data.lastColorChange = Now()
+				--	Data.lastColorRGB = {r=r,g=g,b=b}
 				--	Settings.fillRGB.friend = {r=r,g=g,b=b}
 				--end
 				--if GUI:IsItemClicked() then
-				--	self.Data.lastColorChange = Now()
-				--	self.Data.lastColorRGB = {r=r,g=g,b=b}
+				--	Data.lastColorChange = Now()
+				--	Data.lastColorRGB = {r=r,g=g,b=b}
 				--end
 
 				GUI:AlignFirstTextHeightToWidgets()
@@ -2882,12 +2876,12 @@ function self.Draw()
 			elseif (tabname == GetString("Recent Draws")) then
 
 				if GUI:Button("Clear List") then
-					table.clear(self.Data.BlacklistRecorder)
-					self.Data.Blacklistorder = nil
+					table.clear(Data.BlacklistRecorder)
+					Data.Blacklistorder = nil
 				end
 				GUI:Separator()
 				local recentDraws = {}
-				for id, info in pairs(self.Data.BlacklistRecorder) do
+				for id, info in pairs(Data.BlacklistRecorder) do
 					recentDraws[info.pos] = id
 				end
 
@@ -2915,9 +2909,9 @@ function self.Draw()
 				local addradius = false
 				for i = #recentDraws, 1, -1 do
 					local id = recentDraws[i]
-					if table.valid(self.Data.BlacklistRecorder[id]) and not self.Settings.aoeIDUserSetCones[id] and not self.Settings.aoeIDUserSetDonuts[id] then
+					if table.valid(Data.BlacklistRecorder[id]) and not Settings.aoeIDUserSetCones[id] and not Settings.aoeIDUserSetDonuts[id] then
 						local ac = ActionList:Get(1, id)
-						local info = self.Data.BlacklistRecorder[id]
+						local info = Data.BlacklistRecorder[id]
 						local mapName = GetMapName(info.map)
 						GUI:Text(id) GUI:NextColumn()
 						GUI:Text(ac.name) GUI:NextColumn()
@@ -2926,9 +2920,9 @@ function self.Draw()
 
 
 						if GUI:Button("Blacklist##MBL_blacklistbtn"..id) then
-							if not self.Settings.aoeIDUserBlacklist[id] then
-								self.Data.BlacklistRecorder[id] = nil
-								self.Settings.aoeIDUserBlacklist[id] = ac.name .. " - " .. mapName
+							if not Settings.aoeIDUserBlacklist[id] then
+								Data.BlacklistRecorder[id] = nil
+								Settings.aoeIDUserBlacklist[id] = ac.name .. " - " .. mapName
 								save(true)
 							end
 						end GUI:NextColumn()
@@ -2966,8 +2960,8 @@ function self.Draw()
 					if GUI:Button(GetString("Add")) then
 						local validInput = (type(tonumber(Data.newanglenum) == "number"))
 						if validInput then
-							self.Settings.aoeIDUserSetCones[tonumber(Data.newangleid)] = {name=Data.newanglelabel,angle=tonumber(Data.newanglenum)}
-							--self.Data.BlacklistRecorder[tonumber(Data.newangleid)] = nil
+							Settings.aoeIDUserSetCones[tonumber(Data.newangleid)] = {name=Data.newanglelabel,angle=tonumber(Data.newanglenum)}
+							--Data.BlacklistRecorder[tonumber(Data.newangleid)] = nil
 							Data.newangleid = nil
 							Data.newanglelabel = nil
 							Data.newanglenum = nil
@@ -2991,8 +2985,8 @@ function self.Draw()
 					if GUI:Button(GetString("Add")) then
 						local validInput = (type(tonumber(Data.newradiusnum) == "number"))
 						if validInput then
-							self.Settings.aoeIDUserSetDonuts[tonumber(Data.newradiusid)] = {name=Data.newradiuslabel,radius=tonumber(Data.newradiusnum)}
-							--self.Data.BlacklistRecorder[tonumber(Data.newradiusid)] = nil
+							Settings.aoeIDUserSetDonuts[tonumber(Data.newradiusid)] = {name=Data.newradiuslabel,radius=tonumber(Data.newradiusnum)}
+							--Data.BlacklistRecorder[tonumber(Data.newradiusid)] = nil
 							Data.newradiusid = nil
 							Data.newradiuslabel = nil
 							Data.newradiusnum = nil
@@ -3018,52 +3012,52 @@ function self.Draw()
 				--local r,g,b,a,changed = GUI:ColorEdit4("Heading Color##HeadingColor",fill.r, fill.g, fill.b, fill.a)
 				local r,g,b,a,changed = self.ColorEditor("Heading Color##HeadingColor",fill.r, fill.g, fill.b, fill.a)
 				if (changed) then
-					self.Data.lastColorChange = Now()
-					self.Data.lastColorRGB = {r=r,g=g,b=b}
-					self.Data.lastLineRGB = outline
+					Data.lastColorChange = Now()
+					Data.lastColorRGB = {r=r,g=g,b=b}
+					Data.lastLineRGB = outline
 					Settings.showHeadingFillingRGB = {r=r,g=g,b=b,a=a}
-					self.Data.lastColorAlpha = a save(true)
+					Data.lastColorAlpha = a save(true)
 				end
 				if GUI:IsItemClicked() then
-					self.Data.lastColorChange = Now()
-					self.Data.lastColorRGB = {r=r,g=g,b=b}
-					self.Data.lastLineRGB = outline
-					self.Data.lastColorAlpha = a
+					Data.lastColorChange = Now()
+					Data.lastColorRGB = {r=r,g=g,b=b}
+					Data.lastLineRGB = outline
+					Data.lastColorAlpha = a
 				end GUI:SameLine(0,15)
 				GUI:ColorEditMode(ColorEditModeFlags)
 				--local r2,g2,b2,a2,changed2 = GUI:ColorEdit4("Outline Color##HeadingColorOutline",outline.r, outline.g, outline.b, outline.a)
 				local r2,g2,b2,a2,changed2 = self.ColorEditor("Outline Color##HeadingColorOutline",outline.r, outline.g, outline.b, outline.a)
 				if (changed2) then
-					self.Data.lastColorChange = Now()
-					self.Data.lastColorRGB = {r=fill.r,g=fill.g,b=fill.b}
-					self.Data.lastLineRGB = {r=r2,g=g2,b=b2,a=a2}
+					Data.lastColorChange = Now()
+					Data.lastColorRGB = {r=fill.r,g=fill.g,b=fill.b}
+					Data.lastLineRGB = {r=r2,g=g2,b=b2,a=a2}
 					Settings.showHeadingOutlineRGB = {r=r2,g=g2,b=b2,a=a2}
-					self.Data.lastColorAlpha = a save(true)
+					Data.lastColorAlpha = a save(true)
 				end
 				if GUI:IsItemClicked() then
-					self.Data.lastColorChange = Now()
-					self.Data.lastColorRGB = {r=fill.r,g=fill.g,b=fill.b}
-					self.Data.lastLineRGB = {r=r2,g=g2,b=b2,a=a2}
-					self.Data.lastColorAlpha = a
+					Data.lastColorChange = Now()
+					Data.lastColorRGB = {r=fill.r,g=fill.g,b=fill.b}
+					Data.lastLineRGB = {r=r2,g=g2,b=b2,a=a2}
+					Data.lastColorAlpha = a
 				end GUI:SameLine(0,15)
 				GUI:Text(GetString("Line Size: ")) GUI:SameLine(0,0) GUI:PushItemWidth(100)
 				local val,changed = GUI:SliderFloat("##OutlineThicknessHeading",thickness,1,10)
 				if changed then
-					self.Data.lastColorChange = Now()
-					self.Data.lastColorRGB = {r=r,g=g,b=b}
-					self.Data.lastLineRGB = {r=r2,g=g2,b=b2,a=a2}
-					self.Data.lastColorAlpha = a
+					Data.lastColorChange = Now()
+					Data.lastColorRGB = {r=r,g=g,b=b}
+					Data.lastLineRGB = {r=r2,g=g2,b=b2,a=a2}
+					Data.lastColorAlpha = a
 					Settings.showHeadingOutlineThickness = val
-					self.Data.lastLineThickness = val save(true)
+					Data.lastLineThickness = val save(true)
 				end GUI:PopItemWidth()
 
 				GUI:Text(GetString("Minimum Radius: ")) GUI:SameLine(0,0) GUI:PushItemWidth(100)
 				local val,changed = GUI:SliderFloat("##MinimumRadiusHeading",minRadius,0.1,10,"%.1f")
 				if changed then
-					self.Data.lastColorChange = Now()
-					self.Data.lastColorRGB = {r=r,g=g,b=b}
-					self.Data.lastLineRGB = {r=r2,g=g2,b=b2,a=a2}
-					self.Data.lastColorAlpha = a
+					Data.lastColorChange = Now()
+					Data.lastColorRGB = {r=r,g=g,b=b}
+					Data.lastLineRGB = {r=r2,g=g2,b=b2,a=a2}
+					Data.lastColorAlpha = a
 					Settings.showHeadingMinRadius = val save(true)
 				end GUI:PopItemWidth() GUI:SameLine(0,15)
 				GUI:Text(GetString("Minimum Frontal: ")) GUI:SameLine(0,0) GUI:PushItemWidth(100)
@@ -3072,10 +3066,10 @@ function self.Draw()
 				GUI:PushStyleVar(GUI.StyleVar_FramePadding, 0, Style.framepadding.y)
 				GUI:PushStyleVar(GUI.StyleVar_WindowPadding, 0, Style.windowpadding.y)
 				if changed then
-					self.Data.lastColorChange = Now()
-					self.Data.lastColorRGB = {r=r,g=g,b=b}
-					self.Data.lastLineRGB = {r=r2,g=g2,b=b2,a=a2}
-					self.Data.lastColorAlpha = a
+					Data.lastColorChange = Now()
+					Data.lastColorRGB = {r=r,g=g,b=b}
+					Data.lastLineRGB = {r=r2,g=g2,b=b2,a=a2}
+					Data.lastColorAlpha = a
 					Settings.showHeadingMinFront = val save(true)
 				end GUI:PopItemWidth()
 
@@ -3275,7 +3269,7 @@ function self.Draw()
 
 
 			-- Sidebar --
-			local Links = self.GUI.Links
+			local Links = Gui.Links
 			winX,winY = GUI:GetWindowSize()
 			posX,posY = GUI:GetWindowPos()
 			local min,max,rate,spacing,padding = 25,50,5,5,0
@@ -3290,7 +3284,7 @@ function self.Draw()
 			GUI:PushStyleVar(GUI.StyleVar_WindowPadding,padding,padding)
 			GUI:PushStyleVar(GUI.StyleVar_ItemSpacing,spacing,spacing)
 			GUI:Begin("MoogleTelegraphs##Sidebar",true,GUI.WindowFlags_NoTitleBar + GUI.WindowFlags_NoResize + GUI.WindowFlags_NoMove + GUI.WindowFlags_NoScrollbar + GUI.WindowFlags_NoScrollWithMouse + GUI.WindowFlags_NoCollapse + GUI.WindowFlags_NoFocusOnAppearing)
-			if GUI:IsWindowFocused("MoogleTelegraphs##Sidebar") then GUI:SetWindowFocus(self.GUI.name) end
+			if GUI:IsWindowFocused("MoogleTelegraphs##Sidebar") then GUI:SetWindowFocus(Gui.name) end
 			for i=1, #Links do
 				local link = Links[i]
 				GUI:Dummy(windowsize-link.size.x,0) GUI:SameLine(0,0)
@@ -3363,7 +3357,7 @@ function self.Draw()
 		if Settings.DrawHeadingEntities then
 			local hEntities,minRadius,minFront,fill,outline,thickness = Settings.showHeadingEntities,Settings.showHeadingMinRadius,Settings.showHeadingMinFront,Settings.showHeadingFillingRGB,Settings.showHeadingOutlineRGB,Settings.showHeadingOutlineThickness
 			if InInstance() and Settings.showHeadingUntargetableMovingEntities then
-				local el = MEntityList("")
+				local el = TensorCore.entityList("")
 				if valid(el) then
 					for id,entity in pairs(el) do
 						if not entity.targetable and (entity.chartype < 2 or entity.chartype > 4) then
@@ -3386,7 +3380,7 @@ function self.Draw()
 			for i=1,#hEntities do
 				local e = hEntities[i]
 				if e.mapid == 0 or e.mapid == p.localmapid then
-					local el = EntityList("contentid="..e.contentid)
+					local el = TensorCore.entityList("contentid="..e.contentid)
 					if valid(el) then
 						for _,entity in pairs(el) do
 							local pos,radius = entity.pos,(function() local h = entity.hitradius
@@ -3490,15 +3484,15 @@ function self.Draw()
 
 		local lastColorChange = Data.lastColorChange
 		if TimeSince(lastColorChange) < 5000 then
-			local pos,fill,a,outline,thickness = p.pos,Data.lastColorRGB,Data.lastColorAlpha,Data.lastLineRGB,self.Data.lastLineThickness
-			if self.GUI.main_tabs.tabs[1].isselected then
+			local pos,fill,a,outline,thickness = p.pos,Data.lastColorRGB,Data.lastColorAlpha,Data.lastLineRGB,Data.lastLineThickness
+			if Gui.main_tabs.tabs[1].isselected then
 				d(thickness)
 				local Radius,angle = 8,90
 				local Segments = (function() local seg = ((Radius * 2) * math.pi) / Settings.verticesSpacing if seg <= Settings.maxSegments then return seg else return Settings.maxSegments end end)()
 				Argus.addConeFilled(pos.x, pos.y, pos.z, Radius, math.rad(angle), pos.h, Segments,
 				                    GUI:ColorConvertFloat4ToU32(fill.r, fill.g, fill.b, a),
 				                    GUI:ColorConvertFloat4ToU32(outline.r, outline.g, outline.b, outline.a), thickness)
-			elseif self.GUI.main_tabs.tabs[4].isselected then
+			elseif Gui.main_tabs.tabs[4].isselected then
 				local Radius = Settings.showHeadingMinRadius
 				local Length = (Radius * 2) + Settings.showHeadingMinFront
 				Argus.addRectFilled(pos.x, pos.y, pos.z, Length, Radius * 2, pos.h,GUI:ColorConvertFloat4ToU32(fill.r,fill.g,fill.b,a),GUI:ColorConvertFloat4ToU32(outline.r,outline.g,outline.b,outline.a),thickness)
@@ -3507,7 +3501,7 @@ function self.Draw()
 		GUI:End()
 		GUI:PopStyleColor()
 	end
-	--if (self.GUI.main_tabs.tabs[5].isselected and (posX and posY and winX and winY)) or Settings.DebugLogPopOut then
+	--if (Gui.main_tabs.tabs[5].isselected and (posX and posY and winX and winY)) or Settings.DebugLogPopOut then
 	--	local DebugTypes,DebugTypesEnabled,DebugLog,DebugLogLimit,DebugLog12Hour,DebugLogPopOut,DebugLogPopOutCollapsed,DebugLogPopOutSize,DebugLogPopOutPos = Data.DebugTypes,Settings.DebugTypesEnabled,Data.DebugLog,Settings.DebugLogLimit,Settings.DebugLog12Hour,Settings.DebugLogPopOut,Settings.DebugLogPopOutCollapsed,Settings.DebugLogPopOutSize,Settings.DebugLogPopOutPos
 	--	GUI:PushStyleVar(GUI.StyleVar_WindowMinSize,(function() if DebugLogPopOut then return 10 else return winX end end)(),(function() if DebugLogPopOut then return 10 else return winY end end)())
 	--	local c = 0
